@@ -1,4 +1,4 @@
-CodePercept
+
 CodePercept is an intelligent code analysis and language detection engine exposed via a high-performance REST API. At its core, it utilizes the "Supreme Detection Engine v5.9" to accurately identify programming languages using advanced heuristics, resolving complex ambiguities between syntactically similar languages (e.g., MATLAB vs. Python, C vs. C++).
 
 This backend service is designed to be the robust foundation for code processing applications, offering capabilities for language detection, prompt management, and database integration.
