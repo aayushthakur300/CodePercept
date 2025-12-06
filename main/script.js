@@ -142,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
             appendMessage("Thinking...", "assistant-temp");
 
             try {
-                const res = await fetch("https://codepercept.onrender.com", {
+                const res = await fetch("/assistant", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ message })
@@ -240,7 +240,7 @@ async function explainCode() {
 
     try {
         // Post code to backend
-        const response = await fetch("https://codepercept.onrender.com", {
+        const response = await fetch('/explain', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ code, language })
@@ -494,7 +494,7 @@ async function saveCodeToDB() {
     if (!code) return;
 
     try {
-        await fetch("https://codepercept.onrender.com", {
+        await fetch("/save-code", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ code, language })
@@ -508,7 +508,7 @@ async function saveCodeToDB() {
 // Load last saved code
 async function loadLastSavedCode() {
     try {
-        const res = await fetch("https://codepercept.onrender.com");
+        const res = await fetch("/load-last-code");
         const data = await res.json();
 
         if (data.status === "success" && data.data) {
@@ -530,7 +530,7 @@ async function loadLastSavedCode() {
 // Load past chat messages
 async function loadSavedChat() {
     try {
-        const res = await fetch("https://codepercept.onrender.com");
+        const res = await fetch("/load-chat");
         const data = await res.json();
 
         if (data.status === "success") {
@@ -553,7 +553,7 @@ async function saveProject() {
     const code = document.getElementById("codeInput").value.trim();
     const language = document.getElementById("languageSelect").value;
 
-    const res = await fetch("https://codepercept.onrender.com", {
+    const res = await fetch("/save-project", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ projectName: name, code, language })
@@ -574,7 +574,7 @@ async function loadProjects() {
     if (!list) return;
 
     try {
-        const res = await fetch("https://codepercept.onrender.com");
+        const res = await fetch("/projects");
         const data = await res.json();
 
         list.innerHTML = "";
@@ -600,7 +600,7 @@ async function loadProjects() {
 
 // Load a specific project into editor
 async function loadProject(id) {
-    const res = await fetch("https://codepercept.onrender.com");
+    const res = await fetch("/projects");
     const data = await res.json();
 
     const project = data.projects.find(p => p.id === id);
@@ -613,7 +613,7 @@ async function loadProject(id) {
 
 // Mark/unmark project as favorite
 async function favoriteProject(id, fav) {
-    await fetch("https://codepercept.onrender.com", {
+    await fetch("/favorite-project", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, fav })
@@ -625,7 +625,7 @@ async function favoriteProject(id, fav) {
 
 // Delete project
 async function deleteProject(id) {
-    await fetch("https://codepercept.onrender.com", {
+    await fetch("/delete-project", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id })
