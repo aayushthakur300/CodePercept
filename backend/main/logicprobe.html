@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CodePercept</title>
+
+    <!-- FONTS -->
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <!-- LOCAL CSS -->
+    <link rel="stylesheet" href="style.css" />
+
+    <!-- Favicon -->
+    <link rel="icon" href="favicon.ico" />
+</head>
+
+<body>
+    <div class="container">
+
+        <!-- HEADER -->
+        <header>
+           <h1>
+    <span class="cp-logo">
+        <span class="cp-orange">Code</span>
+        <span class="cp-white">Percept</span>
+    </span>
+</h1>
+  <button id="darkModeBtn">🌙 </button>
+
+
+            <div class="controls">
+                
+                <!-- LANGUAGE SELECT -->
+                <select id="languageSelect">
+                    <option value="cpp">C++</option>
+                    <option value="c">C</option>
+                    <option value="csharp">C#</option>
+                    <option value="java">Java</option>
+                    <option value="javascript">JavaScript</option>
+                    <option value="typescript">TypeScript</option>
+                    <option value="python">Python</option>
+                    <option value="go">Go</option>
+                    <option value="rust">Rust</option>
+                    <option value="r">R</option>
+                    <option value="php">PHP</option>
+                    <option value="perl">Perl</option>
+                    <option value="ruby">Ruby</option>
+                    <option value="swift">Swift</option>
+                    <option value="kotlin">Kotlin</option>
+                    <option value="dart">Dart</option>
+                    <option value="matlab">MATLAB</option>
+                    <option value="sql">SQL</option>
+                    <option value="html">HTML</option>
+                    <option value="css">CSS</option>
+                    <option value="elixir">Elixir</option>
+                </select>
+
+                <!-- ACTION BUTTONS -->
+                <button id="runBtn">Analyze Code</button>
+                <button id="fullFixBtn" disabled title="This becomes active when errors are found">Full Fix</button>
+            </div>
+        </header>
+
+        <div class="main-content">
+
+            <!-- LEFT PANE (CODE EDITOR) -->
+            <div class="editor-pane">
+                <button id="copyEditorBtn" class="copy-btn">Copy Code</button>
+
+                <div class="editor-wrapper">
+                    <div id="editorLineNumbers" class="line-numbers-area"></div>
+                    <textarea id="codeInput" spellcheck="false"></textarea>
+                </div>
+            </div>
+
+            <!-- RIGHT PANE (OUTPUT PANEL) -->
+            <div class="output-pane" id="outputPane">
+
+                <button id="copyOutputBtn" class="copy-btn">Copy Result</button>
+
+                <div id="loading" class="hidden">Analyzing Syntax & Logic...</div>
+
+                <div id="wrongCode"></div>
+                <div id="correctCode"></div>
+                <div id="results"></div>
+
+            </div>
+        </div>
+
+        <!-- SAVED PROJECTS PANEL -->
+        <div id="projectsPanel" class="float-panel">
+            <div class="panel-header">Saved Projects</div>
+            <div id="projectList" class="panel-body"></div>
+            <button class="panel-action" onclick="saveProject()">Save Current Project</button>
+        </div>
+
+        <footer style="
+            text-align:center;
+            padding:10px;
+            margin-top:10px;
+            font-size:1rem;
+            color:var(--text-muted);
+            border-top:1px solid var(--border);
+        ">
+            © 2025 CodePercept • All Rights Reserved • Developed by <strong>Aayush Thakur</strong>
+        </footer>
+    </div>
+
+    <!-- FLOATING BUTTONS -->
+    <div id="projectsButton" class="floating-btn" data-tip="Projects">📁</div>
+    <div id="chatButton" class="floating-btn" data-tip="Chat">💬</div>
+
+    <!-- CHAT PANEL -->
+    <div id="chatPanel">
+        <div id="chatHeader">CodePercept AI Assistant</div>
+        <div id="chatBox"></div>
+        <textarea id="assistantInput" placeholder="Ask anything..." spellcheck="false"></textarea>
+        <button id="assistantBtn">Send</button>
+    </div>
+
+    <!-- SCRIPT -->
+    <script src="script.js"></script>
+</body>
+</html>

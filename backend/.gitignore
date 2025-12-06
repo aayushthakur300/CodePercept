@@ -1,0 +1,21 @@
+# --- Python Standards ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# --- Virtual Environments ---
+venv/
+.venv/
+env/
+.env
+
+# --- IDE Settings (VS Code, PyCharm, Mac) ---
+.vscode/
+.idea/
+.DS_Store
+
+# --- Project Specific ---
+# Your Python_Complex test writes to this file, so we ignore it
+log.txt
+*.log
