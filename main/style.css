@@ -1,0 +1,696 @@
+/* ==========================================================
+   CLEANED & CONSOLIDATED CSS - Theme variables + Dark Mode (GitHub Dark)
+   - Duplicate blocks removed
+   - All visual properties preserved where possible
+   - Dark-mode palette uses option D (GitHub-like dark)
+   - To enable dark mode by default, add class "dark-mode" to <body>
+   ========================================================== */
+
+/* -------------------------------
+   THEME VARIABLES (Light defaults)
+   ------------------------------- */
+:root {
+    /* Light (default) palette */
+    --bg: #ffffff;
+    --text: #000000;
+
+    --panel: #f4f4f4;        /* panel (cards, panes) */
+    --panel-dark: #eaeaea;   /* subtle darker panel */
+
+    --code-bg: #fafafa;      /* code/editor background */
+    --code-text: #000000;
+
+    --border: #d0d0d0;
+
+    /* Buttons */
+    --button-bg: linear-gradient(135deg, #58a6ff, #1f6feb);
+    --button-text: #ffffff;
+    --button-border: #c5c5c5;
+
+    --fullfix-bg: linear-gradient(135deg, #a371f7, #6f42c1);
+
+    /* Copy button */
+    --copy-btn-bg: var(--code-bg);
+    --copy-btn-text: #000000;
+
+    /* Brand & status */
+    --accent: #58a6ff;
+    --concept: #7ee787;
+    --danger: #da3633;
+    --danger-glow: rgba(218, 54, 51, 0.4);
+    --warning: #d29922;
+
+    /* Text variants */
+    --text-main: #c9d1d9;    /* used across many components originally */
+    --text-muted: #8b949e;
+
+    /* Fonts */
+    --font-mono: 'Fira Code', 'Consolas', monospace;
+    --font-ui: 'Segoe UI', -apple-system, system-ui, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* -------------------------------
+   DARK MODE (option D: GitHub-like)
+   ------------------------------- */
+body.dark-mode {
+    --bg: #0d1117;           /* page background */
+    --text: #e6edf3;         /* primary text */
+
+    --panel: #161b22;        /* panel background */
+    --panel-dark: #0f141a;   /* darker panel / line numbers */
+
+    --code-bg: #0b0f15;      /* code editor background */
+    --code-text: #c9d1d9;
+
+    --border: #30363d;
+
+    --button-bg: linear-gradient(135deg, #58a6ff, #1f6feb);
+    --button-text: #ffffff;
+    --button-border: #30363d;
+
+    --fullfix-bg: linear-gradient(135deg, #a371f7, #6f42c1);
+
+    --copy-btn-bg: var(--code-bg);
+    --copy-btn-text: var(--text);
+
+    --accent: #58a6ff;
+    --concept: #7ee787;
+    --danger: #da3633;
+    --danger-glow: rgba(218, 54, 51, 0.4);
+    --warning: #d29922;
+
+    --text-main: #c9d1d9;
+    --text-muted: #8b949e;
+}
+
+/* -------------------------------
+   GLOBAL LAYOUT & BASE (kept original properties)
+   ------------------------------- */
+* { box-sizing: border-box; }
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-ui);
+    margin: 0;
+
+    /* keep full page scroll behavior from original */
+    min-height: 100vh;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    height: auto;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 25px;
+    width: 100%;
+    gap: 20px;
+}
+
+/* -------------------------------
+   HEADER & CONTROLS
+   ------------------------------- */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+header h1 {
+    background-size: 200%;
+    transition: all 0.45s ease;
+    cursor: pointer;
+    font-size: 1.6rem;
+    margin: 0;
+}
+
+header h1:hover {
+    background-position: 100%;
+    transform: translateY(-2px) scale(1.04);
+    text-shadow: 0 0 10px rgba(88, 166, 255, 0.7), 0 0 20px rgba(163, 113, 247, 0.6);
+}
+
+.controls { display: flex; gap: 15px; }
+
+select {
+    padding: 12px 20px;
+    background-color: var(--code-bg);
+    color: var(--text-main);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: 0.2s;
+}
+select:hover { border-color: var(--accent); }
+select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px rgba(88,166,255,0.1); }
+
+/* BUTTONS (primary & general) */
+button {
+    padding: 12px 30px;
+    background: var(--button-bg);
+    color: var(--button-text);
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.35s ease;
+    box-shadow: 0 4px 15px rgba(31, 111, 235, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    position: relative;
+    overflow: hidden;
+}
+
+button:hover:not(:disabled) {
+    transform: translateY(-3px) scale(1.03);
+    box-shadow: 0 0 12px rgba(88, 166, 255, 0.65), 0 0 24px rgba(88, 166, 255, 0.45);
+}
+
+button:active:not(:disabled) { transform: scale(0.97); box-shadow: 0 0 6px rgba(88,166,255,0.4); }
+button:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none !important; transform: none !important; }
+
+button::after {
+    content: "";
+    position: absolute;
+    top: 0; left: -120%; width: 120%; height: 100%;
+    background: linear-gradient(120deg, transparent, rgba(255,255,255,0.15), transparent);
+    transition: 0.6s ease;
+}
+button:hover::after { left: 120%; }
+
+/* Full Fix Button special style preserved */
+#fullFixBtn {
+    background: var(--fullfix-bg);
+    box-shadow: 0 4px 15px rgba(163, 113, 247, 0.3);
+}
+#fullFixBtn:hover:not(:disabled) {
+    transform: translateY(-3px) scale(1.03);
+    box-shadow: 0 0 12px rgba(163,113,247,0.65), 0 0 25px rgba(163,113,247,0.45);
+}
+#fullFixBtn:active:not(:disabled) { transform: scale(0.97); box-shadow: 0 0 6px rgba(163,113,247,0.4); }
+#fullFixBtn::after { background: linear-gradient(120deg, transparent, rgba(255,255,255,0.25), transparent); }
+#fullFixBtn:hover::after { left: 130%; }
+
+/* -------------------------------
+   MAIN WORKSPACE (editor + output)
+   ------------------------------- */
+.main-content { display: flex; flex: 1; gap: 25px; height: auto; min-height: 0; }
+
+.editor-pane, .output-pane {
+    flex: 1; display: flex; flex-direction: column;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 5px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    transition: border-color 0.3s;
+    position: relative;
+    overflow: hidden;
+    min-height: 600px;
+    height: auto;
+}
+.editor-pane:focus-within { border-color: var(--accent); }
+
+/* Editor wrapper & scroll */
+.editor-wrapper { display: flex; min-height: 100%; height: auto; width: 100%; position: relative; }
+.editor-scroll { display: flex; height: 100%; width: 100%; overflow: visible; }
+
+/* Line numbers & code input shared metrics (kept exact properties) */
+#editorLineNumbers, #codeInput {
+    font-family: var(--font-mono) !important;
+    font-size: 14px !important;
+    line-height: 24px !important;
+    padding-top: 20px !important;
+    padding-bottom: 20px !important;
+    margin: 0 !important;
+    border: none !important;
+    outline: none !important;
+    vertical-align: top !important;
+    box-sizing: border-box !important;
+}
+
+#editorLineNumbers {
+    width: 45px !important;
+    text-align: right;
+    color: var(--text-muted);
+    background: var(--code-bg);
+    border-right: 1px solid var(--border) !important;
+    padding-right: 8px !important;
+    flex-shrink: 0;
+    user-select: none;
+    min-height: 600px;
+}
+
+#codeInput {
+    flex: 1;
+    background: var(--code-bg);
+    color: var(--text-main);
+    padding-left: 15px !important;
+    resize: none;
+    white-space: pre;
+    overflow-x: auto;
+    overflow-y: hidden;
+    min-height: 600px !important;
+}
+
+/* Output area kept exact */
+.output-pane { padding: 20px; overflow-y: auto; background: var(--code-bg); }
+
+/* Split divider color (preserve) */
+.split-divider { background: var(--border) !important; }
+
+/* Scrollbar styling preserved */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--code-bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; border: 2px solid var(--code-bg); }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+/* -------------------------------
+   LOADING, ANIMATIONS, HIDDEN
+   ------------------------------- */
+.hidden { display: none !important; }
+#loading { font-weight: bold; color: var(--accent); display:flex; align-items:center; justify-content:center; gap:10px; padding-top:20px; font-size:1.1rem; }
+#loading::after { content: ""; width:12px; height:12px; border:2px solid var(--accent); border-top-color: transparent; border-radius:50%; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* -------------------------------
+   STATUS MESSAGES (keep exact styles)
+   ------------------------------- */
+.error-msg { border: 1px solid var(--danger); background: rgba(218,54,51,0.1); color: #ff7b72; padding: 20px; border-radius: 8px; text-align: center; }
+.error-msg h3 { margin-top: 0; }
+
+.warning-msg { border: 1px solid var(--warning); background: rgba(210,153,34,0.1); color: #e3b341; padding: 20px; border-radius: 8px; text-align: center; animation: fadeIn 0.5s ease; }
+.warning-msg h3 { margin-top: 0; }
+
+/* -------------------------------
+   DEBUGGER ERROR TABLE
+   ------------------------------- */
+.error-table { width: 100%; border-collapse: separate; border-spacing: 0 8px; margin-top: 10px; }
+.error-table th { text-align: left; padding: 12px; color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+.error-table tbody tr { background: rgba(218,54,51,0.05); transition: transform 0.2s, box-shadow 0.2s; animation: slideIn 0.3s ease forwards; opacity: 0; }
+.error-table tbody tr:hover { transform: scale(1.01); background: rgba(218,54,51,0.15); box-shadow: 0 4px 15px var(--danger-glow); border-left: 3px solid var(--danger); }
+.error-table td { padding: 15px; border-top: 1px solid #251010; border-bottom: 1px solid #251010; }
+.error-table td:first-child { border-top-left-radius: 6px; border-bottom-left-radius: 6px; }
+.error-table td:last-child { border-top-right-radius: 6px; border-bottom-right-radius: 6px; }
+
+/* -------------------------------
+   MENTOR MODE CARDS & EXPLANATION FEED
+   ------------------------------- */
+.mentor-intro { background: linear-gradient(90deg, rgba(88,166,255,0.1), transparent); border-left: 4px solid var(--accent); padding: 15px; margin-bottom: 25px; font-size: 1.1rem; border-radius: 0 8px 8px 0; animation: fadeIn 0.5s ease; }
+.explanation-feed { display: flex; flex-direction: column; gap: 20px; }
+.explain-card { background-color: var(--panel); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; transition: border-color 0.2s, transform 0.2s; animation: slideIn 0.3s ease forwards; opacity: 0; }
+.explain-card:hover { border-color: var(--accent); transform: translateX(4px); }
+
+.card-header { background-color: #21262d; padding: 8px 15px; display:flex; align-items:center; gap:15px; border-bottom: 1px solid var(--border); }
+.line-badge { background: var(--border); color: var(--text-muted); padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-family: var(--font-mono); }
+
+.code-snippet { background: #05070a; padding: 10px 15px; font-family: var(--font-mono); font-size: 0.9rem; color: var(--accent); border-bottom: 1px solid var(--border); white-space: pre-wrap; }
+
+.card-body { padding: 15px; line-height: 1.6; color: var(--text-main); font-size: 0.95rem; }
+
+/* -------------------------------
+   CODE BLOCKS, WRONG/CORRECT LINES
+   ------------------------------- */
+#wrongCode h3, #correctCode h3 { margin: 0 0 10px 0; padding-left: 5px; font-weight: 700; font-size: 1.1rem; }
+#wrongCode h3 { color: var(--danger); }
+#correctCode h3 { color: var(--concept); }
+
+.code-box { background: #05070a; border: 1px solid var(--border); border-radius: 8px; padding: 15px; font-family: var(--font-mono); font-size: 0.9rem; white-space: pre-wrap; overflow-x: auto; line-height: 1.4; color: var(--text-main); animation: fadeIn 0.4s ease; }
+
+.error-line { display: flex; gap: 12px; padding: 6px 0; border-bottom: 1px dashed rgba(255,0,0,0.2); }
+.error-line:last-child { border-bottom: none; }
+.line-num { width: 40px; text-align: right; color: var(--danger); font-family: var(--font-mono); }
+.wrong-text { flex: 1; color: #ff7b72; }
+
+.correct-line { display: flex; gap: 12px; padding: 4px 0; }
+.correct-text { color: var(--concept); }
+
+/* -------------------------------
+   COPY BUTTONS & TOAST
+   ------------------------------- */
+.copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 14px; background: var(--copy-btn-bg) !important; color: var(--copy-btn-text) !important; border: 1px solid var(--border) !important; border-radius: 6px; font-size: 0.75rem; font-family: var(--font-ui); font-weight: 600; cursor: pointer; z-index: 20; opacity: 0.85; transition: 0.25s ease; }
+.copy-btn:hover { opacity: 1; transform: scale(1.05); }
+
+.copy-toast { position: fixed; bottom: 95px !important; right: 25px !important; background: #238636; color: white; padding: 12px 20px; border-radius: 6px; font-size: 0.85rem; font-family: var(--font-ui); opacity: 0; transform: translateY(10px); transition: all 0.3s ease; z-index: 4000 !important; }
+.copy-toast.show { opacity: 1; transform: translateY(0); }
+
+/* -------------------------------
+   Floating/Chat/Projects Buttons & Panels
+   ------------------------------- */
+#chatButton { position: fixed; bottom: 25px; right: 25px; width: 55px; height: 55px; background: var(--accent); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; box-shadow: 0 0 15px rgba(88,166,255,0.6); transition: 0.3s ease; z-index: 2000; }
+#chatButton:hover { transform: scale(1.12); box-shadow: 0 0 20px rgba(88,166,255,1); }
+
+#chatPanel { position: fixed; bottom: 90px; right: 25px; width: 330px; height: 430px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 0 25px rgba(0,0,0,0.6); padding: 0; display: none; flex-direction: column; overflow: hidden; z-index: 2100; }
+#chatHeader { background: var(--accent); padding: 12px; text-align: center; font-weight: bold; color: white; }
+
+#projectsButton { position: fixed; bottom: 25px; right: 100px !important; width: 55px; height: 55px; background: #238636; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; box-shadow: 0 0 15px rgba(88,166,255,0.6); transition: 0.3s ease; z-index: 2000; }
+#projectsButton:hover { transform: scale(1.12); box-shadow: 0 0 20px rgba(88,166,255,1); }
+
+.floating-btn::after { content: attr(data-tip); position: absolute; bottom: 70px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); padding: 6px 10px; border-radius: 6px; color: white; font-size: 0.75rem; opacity: 0; pointer-events: none; white-space: nowrap; transition: 0.25s ease; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.1); }
+.floating-btn::before { content: ""; position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%); border-width: 6px; border-style: solid; border-color: rgba(0,0,0,0.85) transparent transparent transparent; opacity: 0; transition: 0.25s ease; }
+.floating-btn:hover::after, .floating-btn:hover::before { opacity: 1; }
+
+/* -------------------------------
+   PROJECTS PANEL & LIST
+   ------------------------------- */
+#projectsPanel { position: fixed !important; bottom: 90px !important; right: 25px !important; width: 330px; height: 430px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 0 25px rgba(0,0,0,0.6); display: none; flex-direction: column; overflow: hidden; z-index: 2100; }
+#projectsPanel[style*="display: flex"] { display: flex !important; }
+#projectsPanel .panel-header { background: var(--accent); padding: 12px; text-align: center; font-weight: bold; color: white; border-bottom: 1px solid var(--border); }
+#projectsPanel .panel-body { flex: 1; overflow-y: auto; padding: 15px; background: var(--code-bg); }
+
+.project-item { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px; transition: border-color 0.2s ease; }
+.project-item:hover { border-color: var(--accent); }
+.project-item h4 { margin: 0; font-size: 0.9rem; color: var(--text-main); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.project-actions { display: flex; gap: 8px; width: 100%; }
+.project-actions button { flex: 1; padding: 6px 0; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 6px; cursor: pointer; transition: all 0.2s ease; box-shadow: none; }
+.project-actions button:nth-child(1) { background: rgba(88,166,255,0.1); border: 1px solid rgba(88,166,255,0.3); color: #58a6ff; }
+.project-actions button:nth-child(1):hover { background: #58a6ff; color: #090b10; }
+.project-actions button:nth-child(2) { background: rgba(210,153,34,0.1); border: 1px solid rgba(210,153,34,0.3); color: #d29922; }
+.project-actions button:nth-child(2):hover { background: #d29922; color: #090b10; }
+.project-actions button:nth-child(3) { background: rgba(218,54,51,0.1); border: 1px solid rgba(218,54,51,0.3); color: #ff7b72; }
+.project-actions button:nth-child(3):hover { background: #da3633; color: white; }
+
+#saveProjectBtn { width: 100%; margin-top: 0; padding: 10px; font-size: 0.9rem; background: var(--button-bg); color: var(--button-text); border: none; border-radius: 6px; font-weight: 600; }
+#saveProjectBtn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(88,166,255,0.4); }
+
+/* -------------------------------
+   CHAT UI
+   ------------------------------- */
+#chatBox { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 15px; height: 350px; overflow-y: auto; margin-top: 15px; margin-bottom: 15px; box-shadow: 0 6px 18px rgba(0,0,0,0.25); }
+.msg { max-width: 75%; padding: 12px 16px; margin-bottom: 12px; border-radius: 12px; font-size: 0.95rem; line-height: 1.5; word-wrap: break-word; animation: fadeIn 0.3s ease; }
+.msg.user { background: #238636; color: white; margin-left: auto; border-bottom-right-radius: 3px; }
+.msg.assistant { background: #21262d; border: 1px solid var(--border); color: var(--text-main); border-bottom-left-radius: 3px; }
+.msg.assistant-temp { background: #21262d; border: 1px dashed var(--accent); color: var(--accent); border-bottom-left-radius: 3px; }
+
+#assistantInput { width: 100%; height: 60px; resize: none; border-radius: 10px; background: var(--code-bg); color: var(--text-main); border: 1px solid var(--border); font-size: 0.95rem; padding: 12px; outline: none; font-family: var(--font-ui); }
+#assistantBtn { margin-top: 10px; width: 100%; padding: 12px; border-radius: 10px; background: linear-gradient(135deg, var(--accent), #1f6feb); color: white; border: none; font-size: 1rem; font-weight: 600; cursor: pointer; transition: 0.3s ease; }
+#assistantBtn:hover { transform: translateY(-2px); box-shadow: 0 0 12px rgba(88,166,255,0.5); }
+
+/* -------------------------------
+   LANGUAGE SELECT / DROPDOWN
+   ------------------------------- */
+.language-select-container { position: relative; width: 200px; }
+#languageSearch { width: 100%; padding: 10px 14px; background: var(--code-bg); color: var(--text-main); border: 1px solid var(--border); border-radius: 8px; outline: none; font-size: 0.95rem; }
+#languageDropdown { position: absolute; top: 44px; width: 100%; max-height: 220px; overflow-y: auto; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; z-index: 9999; padding: 5px 0; }
+.hidden { display: none; }
+.lang-option { padding: 10px 14px; cursor: pointer; color: var(--text-main); }
+.lang-option:hover { background: var(--accent); color: #000; }
+
+/* -------------------------------
+   CODEPERCEPT LOGO
+   ------------------------------- */
+.cp-logo { font-family: 'Segoe UI', sans-serif; font-weight: 700; font-size: 2rem; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 4px; }
+.cp-logo .cp-orange { color: #f97316; text-shadow: 0 0 6px rgba(249,115,22,0.4); }
+.cp-logo .cp-white { color: #e6e6e6; text-shadow: 0 0 6px rgba(255,255,255,0.35); }
+
+/* -------------------------------
+   RESPONSIVE / MEDIA QUERIES (kept)
+   ------------------------------- */
+@media (max-width: 1400px) { .container { padding: 15px; } header h1 { font-size: 1.4rem; } select, button { padding: 10px 18px; font-size: 0.9rem; } }
+@media (max-width: 1024px) { .main-content { gap: 18px; } #editorLineNumbers { width: 42px !important; font-size: 13.5px !important; line-height: 21.6px !important; } #codeInput { font-size: 13.5px !important; padding: 16px !important; line-height: 21.6px !important; } header { padding: 10px 15px; flex-wrap: wrap; gap: 10px; } .controls { flex-wrap: wrap; justify-content: center; gap: 10px; } }
+@media (max-width: 820px) {
+    .main-content { flex-direction: column !important; height: auto !important; }
+    .editor-pane, .output-pane { height: auto !important; min-height: 400px; }
+    #editorLineNumbers { width: 38px !important; font-size: 13px !important; line-height: 20.8px !important; }
+    #codeInput { font-size: 13px !important; padding: 14px !important; line-height: 20.8px !important; }
+    header h1 { font-size: 1.3rem; text-align: center; }
+    #projectsButton { right: 90px !important; bottom: 20px !important; }
+    #chatButton { right: 20px !important; bottom: 20px !important; }
+    .float-panel, #chatPanel { width: 85% !important; right: 7.5% !important; height: 60vh !important; }
+    .copy-toast { right: 20px !important; bottom: 75px !important; }
+}
+@media (max-width: 600px) {
+    .container { padding: 12px; gap: 12px; }
+    header { flex-direction: column; text-align: center; gap: 8px; }
+    header h1 { font-size: 1.2rem !important; }
+    select, button { padding: 9px 16px !important; font-size: 0.85rem !important; }
+    #editorLineNumbers { width: 35px !important; font-size: 12px !important; line-height: 19.2px !important; }
+    #codeInput { font-size: 12px !important; padding: 12px !important; line-height: 19.2px !important; }
+    #chatButton, #projectsButton { width: 48px !important; height: 48px !important; font-size: 22px !important; }
+    #projectsButton { right: 75px !important; }
+    #chatButton { right: 15px !important; }
+    .float-panel, #chatPanel { width: 90% !important; right: 5% !important; }
+}
+@media (max-width: 480px) { header { padding: 8px !important; } header h1 { font-size: 1.1rem !important; } #editorLineNumbers { width: 30px !important; font-size: 11px !important; line-height: 17.6px !important; } #codeInput { font-size: 11px !important; padding: 10px !important; line-height: 17.6px !important; } .msg { font-size: 0.82rem !important; } .float-panel, #chatPanel { height: 58vh !important; } }
+
+/* -------------------------------
+   HIDE UNWANTED ELEMENTS
+   ------------------------------- */
+.saved-projects-container, .legacy-project-list, #savedProjectsList { display: none !important; }
+
+/* -------------------------------
+   EDITOR ALIGNMENT / LOCKED METRICS
+   (kept values, deduped) 
+   ------------------------------- */
+#editorLineNumbers, #codeInput { font-family: var(--font-mono) !important; font-size: 14px !important; line-height: 24px !important; padding-top: 20px !important; padding-bottom: 20px !important; margin: 0 !important; border: none !important; outline: none !important; vertical-align: top !important; box-sizing: border-box !important; }
+
+#editorLineNumbers { width: 45px !important; text-align: right; color: var(--text-muted); background: var(--code-bg); border-right: 1px solid var(--border) !important; padding-right: 8px !important; flex-shrink: 0; user-select: none; }
+
+#codeInput { flex:1; background: var(--code-bg); color: var(--text-main); padding-left: 15px !important; resize: none; white-space: pre; overflow-x: auto; overflow-y: hidden; }
+
+/* ============================================================
+   CHAT PANEL + INPUT + SEND BUTTON
+============================================================ */
+
+#chatPanel {
+    position: fixed !important;
+    bottom: 90px !important;
+    right: 25px !important;
+    width: 330px;
+    height: 430px;
+    background: var(--panel) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 0 30px rgba(0,0,0,0.7) !important;
+    display: none;
+    flex-direction: column;
+    overflow: hidden !important;
+    z-index: 9999 !important;
+}
+
+#chatHeader {
+    background: var(--accent) !important;
+    color: white !important;
+    padding: 12px !important;
+    font-weight: bold !important;
+    text-align: center !important;
+}
+
+#chatBox {
+    background: var(--panel) !important;
+    border: none !important;
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+}
+
+#assistantInput {
+    background: var(--code) !important;
+    color: var(--text) !important;
+    border: 1px solid var(--border) !important;
+    resize: none;
+    padding: 12px !important;
+    border-radius: 8px !important;
+}
+
+#assistantBtn {
+    background: linear-gradient(135deg, var(--accent), #1f6feb) !important;
+    color: white !important;
+    border: none !important;
+    padding: 12px !important;
+    border-radius: 8px !important;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+/* ============================================================
+   SELECT DROPDOWN FIX (LIGHT + DARK)
+============================================================ */
+
+select {
+    background: var(--panel) !important;
+    color: var(--text) !important;
+    border: 1px solid var(--border) !important;
+    padding: 10px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+}
+
+select option {
+    background: var(--panel) !important;
+    color: var(--text) !important;
+    border: none !important;
+    padding: 8px;
+}
+
+select option:checked,
+select option:hover {
+    background: var(--accent) !important;
+    color: #000 !important;
+}
+
+body.dark-mode select,
+body.dark-mode select option {
+    background: var(--panel-bg) !important;
+    color: var(--text-color) !important;
+}
+
+body:not(.dark-mode) select,
+body:not(.dark-mode) option {
+    background: #ffffff !important;
+    color: #000000 !important;
+}
+
+body.dark-mode select option {
+    background-color: #161b22 !important;
+    color: #ffffff !important;
+}
+
+/* ============================================================
+   LOGO FIX
+============================================================ */
+
+.cp-logo {
+    font-family: 'Segoe UI', sans-serif;
+    font-weight: 700;
+    font-size: 2rem;
+    letter-spacing: 0.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.cp-logo .cp-orange {
+    color: #f97316;
+    text-shadow: 0 0 4px rgba(249,115,22,0.35),
+                 0 0 8px rgba(249,115,22,0.25);
+}
+
+body:not(.dark-mode) .cp-logo .cp-white {
+    color: #5f5f5f !important;
+    opacity: 1 !important;
+    text-shadow: 0 0 4px rgba(0,0,0,0.1),
+                 0 0 8px rgba(0,0,0,0.05);
+}
+
+body.dark-mode .cp-logo .cp-white {
+    color: #e6e6e6 !important;
+    opacity: 0.55;
+    text-shadow: 0 0 6px rgba(255,255,255,0.35);
+}
+
+/* ============================================================
+   WHITE MODE FIXES (TEXT, CODE BOXES, BUTTONS)
+============================================================ */
+
+body:not(.dark-mode) #codeInput,
+body:not(.dark-mode) #editorLineNumbers,
+body:not(.dark-mode) .output-pane,
+body:not(.dark-mode) pre,
+body:not(.dark-mode) textarea {
+    color: #000 !important;
+}
+
+body:not(.dark-mode) button,
+body:not(.dark-mode) #runBtn,
+body:not(.dark-mode) #fullFixBtn {
+    color: #000 !important;
+}
+
+body:not(.dark-mode) #runBtn,
+body:not(.dark-mode) #fullFixBtn {
+    color: #fff !important; /* keep readable */
+}
+
+body:not(.dark-mode) .copy-btn {
+    color: #000 !important;
+}
+
+body:not(.dark-mode) .code-box {
+    background: #ffffff !important;
+    color: #000000 !important;
+    border: 1px solid #d0d0d0 !important;
+}
+
+/* ============================================================
+   WHITE MODE CHAT BUBBLES (User + Assistant)
+============================================================ */
+
+body:not(.dark-mode) .msg.user,
+body:not(.dark-mode) .msg.assistant,
+body:not(.dark-mode) .msg.assistant-temp {
+    background: #ffffff !important;
+    color: #000000 !important;
+    border: 1px solid #d0d0d0 !important;
+    box-shadow: none !important;
+}
+
+body:not(.dark-mode) .msg.user {
+    border-bottom-right-radius: 12px !important;
+}
+
+body:not(.dark-mode) .msg.assistant,
+body:not(.dark-mode) .msg.assistant-temp {
+    border-bottom-left-radius: 12px !important;
+}
+
+/* ============================================================
+   WHITE MODE – REMOVE DARK HEADER/SNIPPET BARS
+============================================================ */
+
+body:not(.dark-mode) .card-header {
+    background: #eaeaea !important;
+    border-color: #d0d0d0 !important;
+    color: #000 !important;
+}
+
+body:not(.dark-mode) .code-snippet {
+    background: #ffffff !important;
+    color: #000 !important;
+    border-color: #d0d0d0 !important;
+}
+
+/* ============================================================
+   WHITE MODE – TEXT OVERRIDE (GLOBAL)
+============================================================ */
+
+body:not(.dark-mode) * {
+    color: #000 !important;
+}
+/* ============================================================
+   ENABLE DRAG-TO-RESIZE ON INPUT BOX
+   ============================================================ */
+
+#assistantInput {
+    /* Allow user to resize height by dragging bottom-right corner */
+    resize: vertical !important; 
+    
+    /* Set limits so it doesn't break the layout */
+    min-height: 60px !important; 
+    max-height: 300px !important;
+}
+
+#chatBox {
+    margin-bottom: 10px !important;
+}
+
