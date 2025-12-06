@@ -1,6 +1,6 @@
 # 🚀 CodePercept — Intelligent Code Analysis & Language Detection Engine
 
-**CodePercept** is a high-performance code analysis backend powered by the **Supreme Detection Engine v5.9**.
+**CodePercept** is a **high-performance code analysis** .
 
 It identifies 20+ languages, explains code line-by-line, detects mismatches, locates errors precisely, and auto-fixes incorrect code — all via a fast, scalable REST API.
 
@@ -50,6 +50,8 @@ CodePercept/
 
 📦 Installation & Setup
 Prerequisites
+
+
 a. Python 3.8+
 
 b. Node.js (Optional — only if using db.js)
@@ -80,6 +82,8 @@ python run_tests.py
 
 
 Includes:
+
+
 a. Accuracy Testing: Confirm correct language detection.
 
 b. Isolation Testing: Reject wrong-language submissions with strict validation.
