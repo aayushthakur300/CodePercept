@@ -89,6 +89,8 @@ c. Regression Coverage: Ensures new changes don't break existing logic.
 ## 📡 API Endpoints (Example)
 
 Method,Endpoint,Description
+
+
 GET,/,Health check / Status
 POST,/detect,Detects language from code snippet
 POST,/analyze,Performs line-by-line analysis
