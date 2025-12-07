@@ -693,4 +693,39 @@ body:not(.dark-mode) * {
 #chatBox {
     margin-bottom: 10px !important;
 }
+/* ============================================================
+   MOBILE RESPONSIVE FIX: HORIZONTAL SCROLL FOR RESULTS
+   (Fixes code wrapping in analysis view)
+============================================================ */
 
+@media (max-width: 820px) {
+    
+    /* Force specific code display areas to scroll instead of wrap */
+    .code-box, 
+    .code-snippet,
+    .error-line,
+    .correct-line {
+        white-space: pre !important;       /* Prevents text from breaking/wrapping */
+        overflow-x: auto !important;       /* Adds the horizontal scrollbar */
+        width: 100% !important;            /* Ensures it fills container */
+        display: block !important;         /* Necessary for scroll behavior */
+    }
+
+    /* Fix for the Error Table to scroll horizontally if too wide */
+    .error-table {
+        display: block !important;
+        overflow-x: auto !important;
+        width: 100% !important;
+        white-space: nowrap !important;    /* Keeps table rows straight */
+    }
+
+    /* Ensure the explanation cards accommodate the scrollable areas */
+    .explain-card {
+        max-width: 100% !important;
+        overflow-x: hidden !important;     /* Prevents whole card from shifting */
+    }
+    
+    .card-body {
+        overflow-x: hidden;                /* Keeps descriptive text wrapping normally */
+    }
+}
