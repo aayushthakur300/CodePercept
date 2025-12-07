@@ -21,8 +21,8 @@ It identifies 20+ languages, explains code line-by-line, detects mismatches, loc
 
 ### ⚙️ Backend Feature Set
 * **🔍 Supreme Language Detection** Accurately detects languages (C, C++, Java, Python, MATLAB, R, etc.) using weighted heuristics.
-* **⚖️ Conflict Arbitration** Advanced tie-breaker logic for ambiguous cases (e.g., Python vs. MATLAB) via weighted scoring.
-* **⚡ REST API Architecture** FastAPI-powered backend designed for high throughput and easy integration.
+* **⚖️ Conflict Arbitration** Advanced tie-breaker logic for ambiguous cases via weighted scoring.
+* **⚡ REST API Architectureaayushthakur300/CodePerceptbackendFastAPI-powered backend designed for high throughput and easy integration.
 * **🗄️ Database Integration** SQLite-backed storage for application data, user logs, and metadata.
 * **🧩 Prompt Management** Modular utilities for loading and managing system prompts cleanly.
 * **🛠️ Extensible Utilities** Scripts for JSON extraction, line numbering, and preprocessing.
