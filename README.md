@@ -96,7 +96,7 @@ POST,/detect,Detects language from code snippet
 POST,/analyze,Performs line-by-line analysis
 POST,/fix,Auto-fixes code errors
 
-## Hosting of Website is done successfully (Link)  ---------->https://codepercept.onrender.com
+## Hosting of Website is done successfully (Link)  ---------->       https://code-percept.onrender.com
 
 
 ## 🤝 Contributing
