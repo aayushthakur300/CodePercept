@@ -1,117 +1,196 @@
-# 🚀 CodePercept — Intelligent Code Analysis & Language Detection Engine
+# 🚀 CodePercept
 
-**CodePercept** is a **high-performance code analysis** .
-
-It identifies 20+ languages, explains code line-by-line, detects mismatches, locates errors precisely, and auto-fixes incorrect code — all via a fast, scalable REST API.
-
----
-
-## ✨ Core Highlights
-
-### 🔹 AI-Powered Capabilities
-👉 **Supports 20+ Programming Languages** 
-👉 **Auto Language Detection & Mismatch Alerts** 
-👉 **Line-by-Line Code Explanation** 
-👉 **Exact Error Line Detection** 
-👉 **One-Click Full Auto Code Fix** 
-👉 **Instant Debugging & Correction** 
-👉 **Beginner-Friendly Explanations** 
-👉 **Real-Time Code Analysis** 
-👉 **And many more…**
-
-### ⚙️ Backend Feature Set
-* **🔍 Supreme Language Detection** Accurately detects languages (C, C++, Java, Python, MATLAB, R, etc.) using weighted heuristics.
-* **⚖️ Conflict Arbitration** Advanced tie-breaker logic for ambiguous cases via weighted scoring.
-* **⚡ REST API** CodePercept backend FastAPI-powered backend designed for high throughput and easy integration.
-* **🗄️ Database Integration** SQLite-backed storage for application data, user logs, and metadata.
-* **🧩 Prompt Management** Modular utilities for loading and managing system prompts cleanly.
-* **🛠️ Extensible Utilities** Scripts for JSON extraction, line numbering, and preprocessing.
+> **AI‑Powered Multi‑Language Code Intelligence Platform**
+> Detect • Analyze • Explain • Fix Code — Automatically
 
 ---
 
-## 🛠️ Technology Stack
+## 🌟 Overview
 
-* **Framework:** Python (FastAPI + Uvicorn)
-* **Database:** SQLite (`app.db`)
-* **Core Logic:** Regex-based heuristics + weighted scoring
-* **Environment:** `.env` configuration (dotenv)
+**CodePercept** is a FAANG‑grade AI code analysis platform designed to **understand, validate, explain, and correct source code across 20+ programming languages**. It goes beyond syntax checking by providing **line‑by‑line explanations, intelligent error detection, language mismatch detection, and full auto‑fixes** — all powered by modern AI models.
+
+This project demonstrates **real‑world engineering depth**, **AI integration**, and **production‑ready backend architecture**, making it ideal for **top‑tier software roles**.
 
 ---
 
+## 🎯 Why CodePercept?
 
+Most code tools either *compile* or *lint*. **CodePercept actually understands code.**
 
-## 📦 Installation & Setup
-Prerequisites
+✔ Explains *why* code works
+✔ Pinpoints *exact lines* causing issues
+✔ Detects *wrong language selection* automatically
+✔ Produces *fully corrected, runnable code*
 
+---
 
-a. Python 3.8+
+## ✨ Key Features
 
-b. Node.js (Optional — only if using db.js)
+### 🧠 Intelligent Language Detection
 
-1. Clone Repository
-   
-    git clone <repository-url>
-    cd backend
+* Automatically detects the **actual programming language** of the pasted code
+* Warns users if the selected language **does not match** the detected one
 
-   
-3. Configure Environment
-   
-   cp .env.example .env
-    # Open .env and fill in required variables (DB path, API keys, etc.)
+### 🧩 Line‑by‑Line Code Explanation
 
-   
-3. Install Dependencies
-   
-   pip install -r requirements.txt
+* Explains **each line of correct code** in a structured, readable format
+* Output style inspired by **GeeksForGeeks / W3Schools** standards
 
-   
-If you don’t have a requirements file yet:
-    pip install fastapi uvicorn python-dotenv
-    
-4. Start the Server
-   uvicorn main:app --reload --port 3001
-The API will run at: http://localhost:3001
+### 🚨 Precise Error Detection
 
-🧪 TestingRun the built-in test suite to verify detection accuracy and isolation logic:
-python run_tests.py
+* Identifies **syntax errors, logical errors, semantic issues**
+* Highlights **exact line numbers** responsible for failures
+* Clearly explains **what is wrong and why**
 
+### 🛠️ Full Auto‑Fix Engine
 
-Includes:
+* Generates a **complete corrected version** of the code
+* Preserves original intent while fixing errors
+* Produces **clean, production‑ready output**
 
+### 🌐 Multi‑Language Support (20+)
 
-a. Accuracy Testing: Confirm correct language detection.
+* C, C++, Java, Python, JavaScript, TypeScript
+* Go, Rust, Kotlin, Swift, PHP, Ruby
+* SQL, Bash, HTML/CSS and more
 
-b. Isolation Testing: Reject wrong-language submissions with strict validation.
+### ⚡ FastAPI‑Powered Backend
 
-c. Regression Coverage: Ensures new changes don't break existing logic.
+* High‑performance Python backend using **FastAPI**
+* Clean REST APIs for analysis and fixes
+* Designed for **scalability and modularity**
 
+### 🔐 Safe & Isolated Analysis
 
-## 📡 API Endpoints (Example)
+* No direct execution of user code
+* Secure prompt handling and validation
 
-Method, Endpoint, Description
+---
 
+## 🏗️ System Architecture
 
-GET,/,Health check / Status
-POST,/detect,Detects language from code snippet
-POST,/analyze,Performs line-by-line analysis
-POST,/fix,Auto-fixes code errors
+```text
+Frontend (HTML/CSS/JS)
+        │
+        ▼
+FastAPI Backend (Python)
+        │
+        ├── Language Detection Engine
+        ├── Line Analyzer & Error Locator
+        ├── AI Explanation Engine (Gemini)
+        └── Auto‑Fix Generator
+```
 
-## Hosting of Website is done successfully (Link)  ---------->       https://code-percept.onrender.com
+---
 
+## 🧑‍💻 Tech Stack
 
-## 🤝 Contributing
+### Frontend
 
-1. Fork the repo
+* HTML5
+* CSS3
+* Vanilla JavaScript
 
-2. Create a new branch
+### Backend
 
-3. Commit your changes
+* Python 3.x
+* FastAPI
+* Pydantic
+* SQLite
 
-4. Run tests using python run_tests.py
+### AI / Intelligence
 
+* Google Gemini API
+* Custom Prompt Engineering
+* Rule‑based + AI hybrid analysis
 
-📄 License
+---
 
-Developed for educational and development use.
+## 📂 Project Structure
 
-Powered by CodePercept 
+```text
+CodePercept/
+│
+├── backend/
+│   ├── main.py              # FastAPI entry point
+│   ├── gemini_client.py     # AI interaction layer
+│   ├── language_detector.py # Language detection logic
+│   ├── utils/
+│   │   ├── line_numbers.py
+│   │   ├── json_extract.py
+│   │   └── prompt_loader.py
+│   └── database.db
+│
+├── frontend/
+│   ├── index.html
+│   ├── style.css
+│   └── script.js
+│
+└── README.md
+```
+
+---
+
+## 🚀 Getting Started
+
+### 1️⃣ Clone the Repository
+
+```bash
+git clone https://github.com/aayushthakur300/CodePercept.git
+cd CodePercept
+```
+
+### 2️⃣ Backend Setup
+
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn main:app --reload
+```
+
+### 3️⃣ Frontend
+
+Open `frontend/index.html` in your browser
+
+---
+
+## 📌 Use Cases
+
+* 🧑‍🎓 Students learning programming
+* 💼 Interview preparation & code review
+* 🧪 Debugging multi‑language snippets
+* 🏢 AI‑assisted developer tooling
+
+---
+
+## 🧠 What Makes This FAANG‑Level?
+
+* Real‑world **AI + Backend integration**
+* Clean API‑driven design
+* Practical developer problem solving
+* Demonstrates **systems thinking**, not just CRUD
+
+---
+
+## 🔮 Future Enhancements
+
+* Docker sandbox execution
+* User authentication & usage billing
+* Code complexity & performance analysis
+* Cross‑language code translation
+* Cloud deployment (AWS/GCP)
+
+---
+
+## 👤 Author
+
+**Aayush Thakur**
+Aspiring Software Engineer | AI & Backend Developer
+
+🔗 GitHub: [https://github.com/aayushthakur300](https://github.com/aayushthakur300)
+
+---
+
+## ⭐ If you like this project
+
+Give it a **star ⭐** — it helps a lot and motivates future improvements!
