@@ -7,9 +7,11 @@
 
 ## 🌟 Overview
 
-**CodePercept** is a FAANG‑grade AI code analysis platform designed to **understand, validate, explain, and correct source code across 20+ programming languages**. It goes beyond syntax checking by providing **line‑by‑line explanations, intelligent error detection, language mismatch detection, and full auto‑fixes** — all powered by modern AI models.
+**CodePercept** is an AI code analysis platform designed to **understand, validate, explain, and correct source code across 20+ programming languages**. It goes beyond syntax checking by providing **line-by-line explanations, intelligent error detection, language mismatch detection, and full auto-fixes** — all powered by modern AI models.
 
-This project demonstrates **real‑world engineering depth**, **AI integration**, and **production‑ready backend architecture**, making it ideal for **top‑tier software roles**.
+🔴 **Live Demo**: [https://code-percept.onrender.com/](https://code-percept.onrender.com/)
+
+This project demonstrates **real-world engineering depth**, **AI integration**, and **production-ready backend architecture**, making it ideal for **top-tier software roles**.
 
 ---
 
@@ -131,6 +133,17 @@ CodePercept/
 
 ---
 
+## 🌍 Live Deployment
+
+🚀 **Production URL**: [https://code-percept.onrender.com/](https://code-percept.onrender.com/)
+
+* Fully deployed full-stack application
+* Backend hosted with FastAPI
+* Frontend served with real-time API interaction
+* Publicly accessible for recruiters & reviewers
+
+---
+
 ## 🚀 Getting Started
 
 ### 1️⃣ Clone the Repository
@@ -151,6 +164,15 @@ uvicorn main:app --reload
 ### 3️⃣ Frontend
 
 Open `frontend/index.html` in your browser
+
+---
+
+## 🎯 Recruiter-Ready Highlights
+
+* Live, production-hosted project (no localhost demos)
+* Real-world AI integration with strict validation
+* Clean backend architecture using FastAPI
+* Multi-language intelligence beyond static analysis
 
 ---
 
