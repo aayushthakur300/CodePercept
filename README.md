@@ -185,7 +185,7 @@ Open `frontend/index.html` in your browser
 
 ---
 
-## 🧠 What Makes This FAANG‑Level?
+## 🧠 What Makes This Special?
 
 * Real‑world **AI + Backend integration**
 * Clean API‑driven design
