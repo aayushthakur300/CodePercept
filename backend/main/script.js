@@ -674,4 +674,4 @@ function toggleDarkMode() {
 const darkModeBtn = document.getElementById("darkModeBtn");
 if (darkModeBtn) {
     darkModeBtn.addEventListener("click", toggleDarkMode);
-}
+} 
