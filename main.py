@@ -1,0 +1,1074 @@
+# import os
+# import sqlite3
+# import json
+# import re  # 🔹 for JSON fence cleanup like in Node.js
+# from contextlib import asynccontextmanager  # 🔹 Required for lifespan
+# from fastapi import FastAPI, Request, HTTPException
+# from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
+# from fastapi.middleware.cors import CORSMiddleware
+# from pydantic import BaseModel
+# from pathlib import Path
+# import traceback
+# import itertools # 🔹 For Round Robin cycling
+
+# # 🔹 FIX: Load .env file explicitly so os.getenv finds the key
+# try:
+#     from dotenv import load_dotenv  # pip install python-dotenv
+#     load_dotenv()
+# except ImportError:
+#     pass
+
+# # 🔹 UPDATED IMPORT: Using Supreme Verification
+# from language_detector import verify_submission, friendly_name
+# from utils.line_numbers import add_line_numbers
+# from utils.json_extract import extract_json_from_text
+# from utils.prompt_loader import PromptLoader
+# import test_samples
+# import run_tests
+
+# # --- AI client wrapper (pluggable) ---
+# try:
+#     import google.generativeai as genai
+#     from google.api_core import exceptions as google_exceptions
+#     GENAI_AVAILABLE = True
+# except Exception:
+#     genai = None
+#     GENAI_AVAILABLE = False
+
+# API_KEY = os.getenv("GEMINI_API_KEY", "")
+
+# # --------------------------------------------------------------------
+# # 🔹 MODEL ROTATION CONFIGURATION
+# # --------------------------------------------------------------------
+# # A list of all models to cycle through (Round Robin + Failover)
+# MODELS_POOL = [
+#     # 🔥 Gemini 2.5 Series (Latest & Best)
+    
+#     'models/gemini-2.0-flash',
+#     'models/gemini-2.0-flash-001',
+#     'models/gemini-flash-latest',
+#     'models/gemini-flash-lite-latest',
+#     'models/gemini-2.5-flash',
+#     'models/gemini-2.5-flash-lite',
+#     'models/gemini-robotics-er-1.5-preview',
+
+#     # --- TIER 2: NEXT GEN (2.5) ---
+#     'models/gemini-2.5-flash-preview-09-2025',
+#     'models/gemini-2.5-flash-lite-preview-09-2025',
+#     'models/gemini-2.5-flash-tts',
+
+#     # --- TIER 3: HIGH INTELLIGENCE PRO MODELS ---
+#     'models/gemini-2.5-pro',
+#     'models/gemini-pro-latest',
+#     'gemini-3-flash-preview',
+#     'models/gemini-3-pro-preview',
+#     'models/deep-research-pro-preview-12-2025',
+
+#     # --- TIER 4: LIGHTWEIGHT / PREVIEW ---
+#     'models/gemini-2.0-flash-lite',
+#     'models/gemini-2.0-flash-lite-001',
+#     'models/gemini-2.0-flash-lite-preview',
+#     'models/gemini-2.0-flash-lite-preview-02-05',
+
+#     # --- TIER 5: EXPERIMENTAL ---
+#     'models/gemini-2.0-flash-exp',
+#     'models/gemini-exp-1206',
+
+#     # --- TIER 6: GEMMA (OPEN MODELS FALLBACK) ---
+#     'models/gemma-3-27b-it',
+#     'models/gemma-3-12b-it',
+#     'models/gemma-3-4b-it',
+#     'models/gemma-3-1b-it',
+#     'models/gemma-3n-e4b-it',
+#     'models/gemma-3n-e2b-it',
+
+#     # --- TIER 7: OBSCURE PREVIEWS (LAST RESORT) ---
+#     'models/gemini-2.5-flash-native-audio-dialog',
+#     'models/nano-banana-pro-preview'
+# ]
+
+# # Create a global iterator for Round Robin load balancing
+# # This ensures every new request starts with the *next* model in the list
+# _model_cycle = itertools.cycle(MODELS_POOL)
+
+# def get_next_start_model():
+#     """Gets the next model in the round-robin cycle to start with."""
+#     return next(_model_cycle)
+
+# def generate_with_rotation(prompt: str):
+#     """
+#     Tries to generate content using models in a loop.
+#     1. Starts with the current Round Robin model.
+#     2. If Quota Exceeded (429), logs it and immediately tries the next model.
+#     3. If success, returns text response.
+#     """
+#     if not API_KEY and not os.getenv("GOOGLE_API_KEY"):
+#          raise RuntimeError("Missing GEMINI_API_KEY or GOOGLE_API_KEY")
+
+#     if not GENAI_AVAILABLE:
+#         raise RuntimeError("google-generativeai package not installed")
+
+#     # Configure API once (or re-configure if keys change dynamically)
+#     genai.configure(api_key=os.getenv("GOOGLE_API_KEY") or API_KEY)
+
+#     # Determine where to start in the pool for this specific request
+#     # We rotate the starting point to distribute load (Round Robin)
+#     start_model = get_next_start_model()
+#     start_index = MODELS_POOL.index(start_model)
+
+#     # Create a list ordered starting from our round-robin pick
+#     # e.g. [C, D, E, A, B] if 'C' was next in line
+#     rotated_pool = MODELS_POOL[start_index:] + MODELS_POOL[:start_index]
+
+#     last_error = None
+
+#     for model_name in rotated_pool:
+#         try:
+#             print(f"🤖 Using Model: {model_name}")
+#             model = genai.GenerativeModel(model_name)
+#             response = model.generate_content(prompt)
+
+#             # --- Extract Text ---
+#             if hasattr(response, "text") and response.text:
+#                 return response.text
+            
+#             # Handle fragmented parts
+#             parts = []
+#             for cand in getattr(response, "candidates", []) or []:
+#                 content = getattr(cand, "content", None)
+#                 if not content: continue
+#                 for part in getattr(content, "parts", []) or []:
+#                     text = getattr(part, "text", "")
+#                     if text: parts.append(text)
+            
+#             if parts:
+#                 return "\n".join(parts)
+            
+#             # If we got a response object but no text, it might be safety blocked
+#             # We treat empty response as a failure to try next model? 
+#             # Or return string representation. Let's return str for safety.
+#             return str(response)
+
+#         except Exception as e:
+#             error_str = str(e).lower()
+#             # Check for Quota limits (429) or Overloaded
+#             if "429" in error_str or "quota" in error_str or "exhausted" in error_str:
+#                 print(f"⚠️ QUOTA EXCEEDED for {model_name}. Switching to next model...")
+#                 last_error = e
+#                 continue # Try next model in loop
+            
+#             if "not found" in error_str or "404" in error_str:
+#                  print(f"⚠️ Model {model_name} not found (might be preview/restricted). Skipping...")
+#                  continue
+
+#             # If it's a real crash (syntax, etc), maybe we shouldn't retry, 
+#             # but for reliability, let's print and retry anyway unless it's critical.
+#             print(f"❌ Error with {model_name}: {e}")
+#             last_error = e
+#             continue
+
+#     # If we exit the loop, all models failed
+#     raise RuntimeError(f"All models exhausted. Last error: {last_error}")
+
+
+# # --- Prompt loader ---
+# BASE_DIR = Path(__file__).parent
+# prompts_dir = BASE_DIR / "prompts"
+# prompt_loader = PromptLoader(prompts_dir)
+
+# # --------------------------------------------------------------------
+# # 🔹 SQLITE DATABASE — FIXED FOR RENDER
+# # --------------------------------------------------------------------
+# DB_PATH = BASE_DIR / "app.db"   # IMPORTANT: Works in Render
+
+# conn = sqlite3.connect(str(DB_PATH), check_same_thread=False)
+# cursor = conn.cursor()
+
+# cursor.executescript("""
+# CREATE TABLE IF NOT EXISTS ai_chat (
+#     id INTEGER PRIMARY KEY AUTOINCREMENT,
+#     user_message TEXT,
+#     ai_response TEXT,
+#     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+# );
+# CREATE TABLE IF NOT EXISTS code_history (
+#     id INTEGER PRIMARY KEY AUTOINCREMENT,
+#     code TEXT,
+#     language TEXT,
+#     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+# );
+# CREATE TABLE IF NOT EXISTS projects (
+#     id INTEGER PRIMARY KEY AUTOINCREMENT,
+#     project_name TEXT,
+#     code TEXT,
+#     language TEXT,
+#     is_favorite INTEGER DEFAULT 0,
+#     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+# );
+# """)
+# conn.commit()
+
+
+# # --------------------------------------------------------------------
+# # 🔹 LIFESPAN EVENT HANDLER
+# # --------------------------------------------------------------------
+# @asynccontextmanager
+# async def lifespan(app: FastAPI):
+#     print("🔍 Loading prompts...")
+#     try:
+#         prompt_loader.reload()
+#         print("📄 Prompts loaded.")
+#     except Exception as e:
+#         print("⚠ Failed loading prompts:", e)
+
+#     port = os.getenv("PORT", "3001")
+#     print(f"\n{'-'*50}")
+#     print(f"🚀 Server running!")
+#     print(f"👉 Open this link: http://localhost:{port}/")
+#     print(f"{'-'*50}\n")
+
+#     yield
+
+#     print("🛑 Shutting down server...")
+
+
+# # --- FastAPI app ---
+# app = FastAPI(lifespan=lifespan, debug=True)
+
+# # --------------------------------------------------------------------
+# # 🔹 REQUIRED FOR VERCEL FRONTEND
+# # --------------------------------------------------------------------
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=["*"],  # You can restrict later
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
+
+# MAIN_DIR = BASE_DIR / "main"
+# PUBLIC_DIR = BASE_DIR / "public"
+
+
+# @app.get("/style.css")
+# async def serve_style():
+#     file = MAIN_DIR / "style.css"
+#     if file.exists():
+#         return FileResponse(str(file))
+#     return JSONResponse({"error": "style.css not found"}, status_code=404)
+
+
+# @app.get("/script.js")
+# async def serve_script():
+#     file = MAIN_DIR / "script.js"
+#     if file.exists():
+#         return FileResponse(str(file))
+#     return JSONResponse({"error": "script.js not found"}, status_code=404)
+
+
+# @app.get("/")
+# async def home():
+#     file = MAIN_DIR / "index.html"
+#     if file.exists():
+#         return FileResponse(str(file))
+#     return JSONResponse({"status": "error", "message": "index.html not found"}, status_code=404)
+
+
+# @app.get("/login")
+# async def login_redirect():
+#     return RedirectResponse(url="/logicprobe")
+
+
+# @app.get("/logicprobe")
+# async def logicprobe():
+#     file = MAIN_DIR / "logicprobe.html"
+#     if file.exists():
+#         return FileResponse(str(file))
+#     return JSONResponse({"status": "error", "message": "logicprobe.html not found"}, status_code=404)
+
+
+# @app.post("/reload-prompts")
+# async def reload_prompts():
+#     try:
+#         prompt_loader.reload()
+#         return {"status": "success", "message": "Prompts reloaded."}
+#     except Exception as e:
+#         return JSONResponse({"status": "error", "error": str(e)}, status_code=500)
+
+
+# # --------------------------------------------------------------------
+# # 🔹 /explain
+# # --------------------------------------------------------------------
+# class ExplainPayload(BaseModel):
+#     code: str
+#     language: str
+#     mode: str = None
+#     wantCorrected: bool = False
+
+
+# @app.post("/explain")
+# async def explain(payload: ExplainPayload):
+#     code = payload.code or ""
+#     language = payload.language or ""
+#     include_corrected = (payload.mode == "full_fix") or payload.wantCorrected
+
+#     is_valid, detected_key = verify_submission(code, language)
+
+#     if not is_valid:
+#         detected_display = friendly_name.get(detected_key, "Unknown/Ambiguous")
+#         selected_display = friendly_name.get(language, language)
+
+#         return {
+#             "status": "language_mismatch",
+#             "detected": detected_display,
+#             "selected": selected_display,
+#             "message": f"❌ LANGUAGE MISMATCH: You selected '{selected_display}', but detected '{detected_display}'."
+#         }
+
+#     numbered_code = add_line_numbers(code)
+
+#     analysis_prompt = prompt_loader.analysis_prompt
+#     analysis_prompt = analysis_prompt.replace("{{LANGUAGE}}", language).replace("{{NUMBERED_CODE}}", numbered_code)
+#     if include_corrected:
+#         analysis_prompt = analysis_prompt.replace("{{INCLUDE_CORRECTED}}", ', "corrected_code": "<PROVIDE_CODE>"')
+#     else:
+#         analysis_prompt = analysis_prompt.replace("{{INCLUDE_CORRECTED}}", "")
+
+#     try:
+#         # 🔹 USE ROTATION FUNCTION HERE
+#         raw_text = generate_with_rotation(analysis_prompt)
+        
+#         cleaned = re.sub(r"```json|```", "", raw_text).strip()
+#         analysis_result = json.loads(cleaned)
+
+#     except Exception as e:
+#         traceback.print_exc()
+#         return JSONResponse({"status": "error", "message": "AI analysis failed.", "detail": str(e)}, status_code=500)
+
+#     if include_corrected and analysis_result.get("status") == "success":
+#         return {"status": "full_fix_not_allowed"}
+
+#     fullfix_prompt = prompt_loader.fullfix_prompt
+#     fullfix_prompt = fullfix_prompt.replace("{{LANGUAGE}}", language).replace("{{NUMBERED_CODE}}", numbered_code)
+#     if include_corrected:
+#         fullfix_prompt = fullfix_prompt.replace("{{INCLUDE_CORRECTED}}", ', "corrected_code": "<PROVIDE_CODE>"')
+#     else:
+#         fullfix_prompt = fullfix_prompt.replace("{{INCLUDE_CORRECTED}}", "")
+
+#     try:
+#         # 🔹 USE ROTATION FUNCTION HERE TOO
+#         raw_full = generate_with_rotation(fullfix_prompt)
+
+#         cleaned_full = re.sub(r"```json|```", "", raw_full).strip()
+#         json_full = json.loads(cleaned_full)
+
+#         return JSONResponse(json_full)
+
+#     except Exception as e:
+#         traceback.print_exc()
+#         return JSONResponse({"status": "error", "message": "AI full fix failed.", "detail": str(e)}, status_code=500)
+
+
+# # --------------------------------------------------------------------
+# # 🔹 /assistant
+# # --------------------------------------------------------------------
+# class AssistantPayload(BaseModel):
+#     message: str
+
+
+# @app.post("/assistant")
+# async def assistant(payload: AssistantPayload):
+#     message = payload.message or ""
+
+#     if not message.strip():
+#         return {"status": "error", "message": "Message is required."}
+#     try:
+#         prompt = f'You are an AI coding assistant.\nUser asked:\n"{message}"'
+        
+#         # 🔹 USE ROTATION FUNCTION HERE
+#         ai_text = generate_with_rotation(prompt)
+
+#         cursor.execute("INSERT INTO ai_chat (user_message, ai_response) VALUES (?, ?)", (message, ai_text))
+#         conn.commit()
+#         return {"status": "success", "reply": ai_text}
+#     except Exception as e:
+#         traceback.print_exc()
+#         return JSONResponse({"status": "error", "message": "AI assistant failed.", "detail": str(e)}, status_code=500)
+
+
+# # --------------------------------------------------------------------
+# # 🔹 SQLite Routes
+# # --------------------------------------------------------------------
+# class SaveCodePayload(BaseModel):
+#     code: str
+#     language: str
+
+
+# @app.post("/save-code")
+# async def save_code(payload: SaveCodePayload):
+#     try:
+#         cursor.execute("INSERT INTO code_history (code, language) VALUES (?, ?)", (payload.code, payload.language))
+#         conn.commit()
+#         return {"status": "success", "id": cursor.lastrowid}
+#     except Exception as e:
+#         return JSONResponse({"status": "error", "error": str(e)}, status_code=500)
+
+
+# @app.get("/load-last-code")
+# async def load_last_code():
+#     try:
+#         cursor.execute("SELECT * FROM code_history ORDER BY id DESC LIMIT 1")
+#         row = cursor.fetchone()
+#         if not row:
+#             return {"status": "success", "data": None}
+#         cols = [d[0] for d in cursor.description]
+#         return {"status": "success", "data": dict(zip(cols, row))}
+#     except Exception as e:
+#         return JSONResponse({"status": "error", "error": str(e)}, status_code=500)
+
+
+# @app.get("/load-chat")
+# async def load_chat():
+#     try:
+#         cursor.execute("SELECT * FROM ai_chat ORDER BY id ASC")
+#         rows = cursor.fetchall()
+#         cols = [d[0] for d in cursor.description]
+#         return {"status": "success", "chat": [dict(zip(cols, r)) for r in rows]}
+#     except Exception as e:
+#         return JSONResponse({"status": "error", "error": str(e)}, status_code=500)
+
+
+# class SaveProjectPayload(BaseModel):
+#     projectName: str
+#     code: str
+#     language: str
+
+
+# @app.post("/save-project")
+# async def save_project(payload: SaveProjectPayload):
+#     try:
+#         cursor.execute("INSERT INTO projects (project_name, code, language) VALUES (?, ?, ?)",
+#                        (payload.projectName, payload.code, payload.language))
+#         conn.commit()
+#         return {"status": "success", "id": cursor.lastrowid}
+#     except Exception as e:
+#         return JSONResponse({"status": "error", "error": str(e)}, status_code=500)
+
+
+# @app.get("/projects")
+# async def get_projects():
+#     try:
+#         cursor.execute("SELECT * FROM projects ORDER BY created_at DESC")
+#         rows = cursor.fetchall()
+#         cols = [d[0] for d in cursor.description]
+#         return {"status": "success", "projects": [dict(zip(cols, r)) for r in rows]}
+#     except Exception as e:
+#         return JSONResponse({"status": "error", "error": str(e)}, status_code=500)
+
+
+# class FavoritePayload(BaseModel):
+#     id: int
+#     fav: bool
+
+
+# @app.post("/favorite-project")
+# async def favorite_project(payload: FavoritePayload):
+#     try:
+#         cursor.execute("UPDATE projects SET is_favorite = ? WHERE id = ?", (1 if payload.fav else 0, payload.id))
+#         conn.commit()
+#         return {"status": "success"}
+#     except Exception as e:
+#         return JSONResponse({"status": "error", "error": str(e)}, status_code=500)
+
+
+# class DeletePayload(BaseModel):
+#     id: int
+
+
+# @app.post("/delete-project")
+# async def delete_project(payload: DeletePayload):
+#     try:
+#         cursor.execute("DELETE FROM projects WHERE id = ?", (payload.id,))
+#         conn.commit()
+#         return {"status": "success"}
+#     except Exception as e:
+#         return JSONResponse({"status": "error", "error": str(e)}, status_code=500)
+import os
+import sqlite3
+import json
+import re  # 🔹 for JSON fence cleanup like in Node.js
+from contextlib import asynccontextmanager  # 🔹 Required for lifespan
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from pathlib import Path
+import traceback
+import itertools # 🔹 For Round Robin cycling
+
+# 🔹 FIX: Load .env file explicitly so os.getenv finds the key
+try:
+    from dotenv import load_dotenv  # pip install python-dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
+# 🔹 UPDATED IMPORT: Using Supreme Verification
+from language_detector import verify_submission, friendly_name
+from utils.line_numbers import add_line_numbers
+from utils.json_extract import extract_json_from_text
+from utils.prompt_loader import PromptLoader
+import test_samples
+import run_tests
+
+# --- AI client wrapper (pluggable) ---
+try:
+    import google.generativeai as genai
+    from google.api_core import exceptions as google_exceptions
+    GENAI_AVAILABLE = True
+except Exception:
+    genai = None
+    GENAI_AVAILABLE = False
+
+API_KEY = os.getenv("GEMINI_API_KEY", "")
+
+# --------------------------------------------------------------------
+# 🔹 MODEL ROTATION CONFIGURATION
+# --------------------------------------------------------------------
+# A list of all models to cycle through (Round Robin + Failover)
+MODELS_POOL = [
+    'models/gemini-3-flash-preview',
+    'models/gemini-3-flash-lite-preview',
+    'models/gemini-3.1-pro-preview',
+    'models/gemini-3.1-pro-preview-customtools',
+    'models/gemini-2.5-pro',
+    'models/gemini-2.5-flash',
+    'models/gemini-2.5-flash-lite',
+    'models/gemini-flash-latest',
+    'models/gemini-flash-lite-latest',
+    'models/gemini-3.1-flash-preview',
+    'models/gemini-3.1-flash-lite-preview',
+    'models/gemini-robotics-er-1.5-preview',
+    'models/gemini-2.0-flash',
+    'models/gemini-2.0-flash-001',
+    'models/gemini-2.0-flash-lite',
+    'models/gemini-2.0-flash-lite-001',
+    'models/gemini-1.5-pro',
+    'models/gemini-1.5-pro-latest',
+    'models/gemini-1.5-pro-001',
+    'models/gemini-1.5-pro-002',
+    'models/gemini-1.5-flash',
+    'models/gemini-1.5-flash-latest',
+    'models/gemini-1.5-flash-001',
+    'models/gemini-1.5-flash-002',
+    'models/gemini-1.5-flash-8b',
+    'models/gemini-1.5-flash-8b-latest',
+    'models/gemini-1.5-flash-8b-001',
+    'models/gemini-pro-latest',
+    'models/gemma-3-27b-it',
+    'models/gemma-3-12b-it',
+    'models/gemma-3-4b-it',
+    'models/gemma-3-1b-it',
+    'models/gemma-3n-e4b-it',
+    'models/gemma-3n-e2b-it',
+    'models/gemma-2-27b-it',
+    'models/gemma-2-9b-it',
+    'models/gemma-2-2b-it','models/gemini-3-pro-preview',
+    'models/deep-research-pro-preview-12-2025',
+    'models/gemini-2.0-flash-exp',
+    'models/gemini-exp-1206',
+    'models/gemini-2.0-flash-lite-preview',
+    'models/gemini-2.0-flash-lite-preview-02-05',
+    'models/gemini-2.5-flash-preview-09-2025',
+    'models/gemini-2.5-flash-lite-preview-09-2025','models/gemini-pro-latest',
+    'models/gemini-1.0-pro-001',
+    'models/gemini-pro',
+    'models/gemini-pro-vision',
+    'models/gemini-2.5-flash-native-audio-dialog',
+    'models/gemini-2.5-flash-tts',
+    'models/nano-banana-pro-preview',
+    'models/aqa',   ]
+
+# Create a global iterator for Round Robin load balancing
+# This ensures every new request starts with the *next* model in the list
+_model_cycle = itertools.cycle(MODELS_POOL)
+
+def get_next_start_model():
+    """Gets the next model in the round-robin cycle to start with."""
+    return next(_model_cycle)
+
+def generate_with_rotation(prompt: str, require_json: bool = False):
+    """
+    Tries to generate content using models in a loop.
+    Added Stage 1 (Native JSON) and Stage 2 (Bulletproof Regex) logic.
+    Any connection errors or JSON failures instantly trigger the next model.
+    """
+    if not API_KEY and not os.getenv("GOOGLE_API_KEY"):
+         raise RuntimeError("Missing GEMINI_API_KEY or GOOGLE_API_KEY")
+
+    if not GENAI_AVAILABLE:
+        raise RuntimeError("google-generativeai package not installed")
+
+    # Configure API once (or re-configure if keys change dynamically)
+    genai.configure(api_key=os.getenv("GOOGLE_API_KEY") or API_KEY)
+
+    # Determine where to start in the pool for this specific request
+    # We rotate the starting point to distribute load (Round Robin)
+    start_model = get_next_start_model()
+    start_index = MODELS_POOL.index(start_model)
+
+    # Create a list ordered starting from our round-robin pick
+    # e.g. [C, D, E, A, B] if 'C' was next in line
+    rotated_pool = MODELS_POOL[start_index:] + MODELS_POOL[:start_index]
+
+    if require_json:
+        # ==========================================
+        # STAGE 1: NATIVE JSON EXTRACTION
+        # ==========================================
+        for model_name in rotated_pool:
+            try:
+                print(f"🤖 STAGE 1 - Trying Model: {model_name}")
+                model = genai.GenerativeModel(model_name)
+                response = model.generate_content(prompt)
+
+                # --- Extract Text ---
+                raw_text = ""
+                if hasattr(response, "text") and response.text:
+                    raw_text = response.text
+                else:
+                    parts = []
+                    for cand in getattr(response, "candidates", []) or []:
+                        content = getattr(cand, "content", None)
+                        if not content: continue
+                        for part in getattr(content, "parts", []) or []:
+                            text = getattr(part, "text", "")
+                            if text: parts.append(text)
+                    if parts:
+                        raw_text = "\n".join(parts)
+                    else:
+                        raw_text = str(response)
+
+                # Attempt Native JSON parse
+                cleaned = re.sub(r"```json|```", "", raw_text).strip()
+                parsed_json = json.loads(cleaned)
+                print(f"✅ STAGE 1 SUCCESS: {model_name}")
+                return parsed_json # If this succeeds, immediately return the dictionary
+                
+            except Exception as e:
+                # Instantly catch JSON failures, Connection Errors, Quota Limits and jump to next
+                print(f"⚠️ STAGE 1 FAILED ({model_name}). Switching to next model...")
+                continue
+        
+        print("❌ ALL MODELS FAILED STAGE 1. INITIATING STAGE 2 (BULLETPROOF REGEX) ❌")
+
+        # ==========================================
+        # STAGE 2: BULLETPROOF REGRESS (REGEX)
+        # ==========================================
+        for model_name in rotated_pool:
+            try:
+                print(f"🛡️ STAGE 2 - Trying Model: {model_name}")
+                model = genai.GenerativeModel(model_name)
+                response = model.generate_content(prompt)
+
+                # --- Extract Text ---
+                raw_text = ""
+                if hasattr(response, "text") and response.text:
+                    raw_text = response.text
+                else:
+                    parts = []
+                    for cand in getattr(response, "candidates", []) or []:
+                        content = getattr(cand, "content", None)
+                        if not content: continue
+                        for part in getattr(content, "parts", []) or []:
+                            text = getattr(part, "text", "")
+                            if text: parts.append(text)
+                    if parts:
+                        raw_text = "\n".join(parts)
+                    else:
+                        raw_text = str(response)
+
+                # Bulletproof approach 1: Provided utility
+                try:
+                    parsed = extract_json_from_text(raw_text)
+                    if isinstance(parsed, dict):
+                        print(f"✅ STAGE 2 SUCCESS (Utility): {model_name}")
+                        return parsed
+                except:
+                    pass
+                
+                # Bulletproof approach 2: Hardcore custom regex (for invalid escapes/commas)
+                match = re.search(r'\{.*\}', raw_text, re.DOTALL)
+                if match:
+                    json_str = match.group(0)
+                    # Fix trailing commas
+                    json_str = re.sub(r',\s*\}', '}', json_str)
+                    json_str = re.sub(r',\s*\]', ']', json_str)
+                    # Force clean invalid escapes
+                    json_str = json_str.replace('\\n', ' ').replace('\\t', ' ').replace('\\"', '"')
+                    
+                    parsed_json = json.loads(json_str)
+                    print(f"✅ STAGE 2 SUCCESS (Regex): {model_name}")
+                    return parsed_json
+                
+                # If extraction fails, raise exception to trigger the next model
+                raise ValueError("Bulletproof Regex extraction found no JSON.")
+
+            except Exception as e:
+                print(f"⚠️ STAGE 2 FAILED ({model_name}). Switching to next model...")
+                continue
+        
+        # If both stages fully fail
+        raise RuntimeError("All models exhausted in BOTH Stage 1 and Stage 2.")
+
+    else:
+        # ==========================================
+        # PLAIN TEXT MODE (For /assistant)
+        # ==========================================
+        last_error = None
+        for model_name in rotated_pool:
+            try:
+                print(f"🤖 Using Model (Text Mode): {model_name}")
+                model = genai.GenerativeModel(model_name)
+                response = model.generate_content(prompt)
+
+                if hasattr(response, "text") and response.text:
+                    return response.text
+                
+                parts = []
+                for cand in getattr(response, "candidates", []) or []:
+                    content = getattr(cand, "content", None)
+                    if not content: continue
+                    for part in getattr(content, "parts", []) or []:
+                        text = getattr(part, "text", "")
+                        if text: parts.append(text)
+                
+                if parts:
+                    return "\n".join(parts)
+                
+                return str(response)
+
+            except Exception as e:
+                # Catch connection errors/quota without crashing
+                print(f"⚠️ Error with {model_name}. Switching to next model...")
+                last_error = e
+                continue
+
+        raise RuntimeError(f"All models exhausted. Last error: {last_error}")
+
+
+# --- Prompt loader ---
+BASE_DIR = Path(__file__).parent
+prompts_dir = BASE_DIR / "prompts"
+prompt_loader = PromptLoader(prompts_dir)
+
+# --------------------------------------------------------------------
+# 🔹 SQLITE DATABASE — FIXED FOR RENDER
+# --------------------------------------------------------------------
+DB_PATH = BASE_DIR / "app.db"   # IMPORTANT: Works in Render
+
+conn = sqlite3.connect(str(DB_PATH), check_same_thread=False)
+cursor = conn.cursor()
+
+cursor.executescript("""
+CREATE TABLE IF NOT EXISTS ai_chat (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_message TEXT,
+    ai_response TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS code_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    code TEXT,
+    language TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS projects (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_name TEXT,
+    code TEXT,
+    language TEXT,
+    is_favorite INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+""")
+conn.commit()
+
+
+# --------------------------------------------------------------------
+# 🔹 LIFESPAN EVENT HANDLER
+# --------------------------------------------------------------------
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("🔍 Loading prompts...")
+    try:
+        prompt_loader.reload()
+        print("📄 Prompts loaded.")
+    except Exception as e:
+        print("⚠ Failed loading prompts:", e)
+
+    port = os.getenv("PORT", "3001")
+    print(f"\n{'-'*50}")
+    print(f"🚀 Server running!")
+    print(f"👉 Open this link: http://localhost:{port}/")
+    print(f"{'-'*50}\n")
+
+    yield
+
+    print("🛑 Shutting down server...")
+
+
+# --- FastAPI app ---
+app = FastAPI(lifespan=lifespan, debug=True)
+
+# --------------------------------------------------------------------
+# 🔹 REQUIRED FOR VERCEL FRONTEND
+# --------------------------------------------------------------------
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # You can restrict later
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+MAIN_DIR = BASE_DIR / "main"
+PUBLIC_DIR = BASE_DIR / "public"
+
+
+@app.get("/style.css")
+async def serve_style():
+    file = MAIN_DIR / "style.css"
+    if file.exists():
+        return FileResponse(str(file))
+    return JSONResponse({"error": "style.css not found"}, status_code=404)
+
+
+@app.get("/script.js")
+async def serve_script():
+    file = MAIN_DIR / "script.js"
+    if file.exists():
+        return FileResponse(str(file))
+    return JSONResponse({"error": "script.js not found"}, status_code=404)
+
+
+@app.get("/")
+async def home():
+    file = MAIN_DIR / "index.html"
+    if file.exists():
+        return FileResponse(str(file))
+    return JSONResponse({"status": "error", "message": "index.html not found"}, status_code=404)
+
+
+@app.get("/login")
+async def login_redirect():
+    return RedirectResponse(url="/logicprobe")
+
+
+@app.get("/logicprobe")
+async def logicprobe():
+    file = MAIN_DIR / "logicprobe.html"
+    if file.exists():
+        return FileResponse(str(file))
+    return JSONResponse({"status": "error", "message": "logicprobe.html not found"}, status_code=404)
+
+
+@app.post("/reload-prompts")
+async def reload_prompts():
+    try:
+        prompt_loader.reload()
+        return {"status": "success", "message": "Prompts reloaded."}
+    except Exception as e:
+        return JSONResponse({"status": "error", "error": str(e)}, status_code=500)
+
+
+# --------------------------------------------------------------------
+# 🔹 /explain
+# --------------------------------------------------------------------
+class ExplainPayload(BaseModel):
+    code: str
+    language: str
+    mode: str = None
+    wantCorrected: bool = False
+
+
+@app.post("/explain")
+async def explain(payload: ExplainPayload):
+    code = payload.code or ""
+    language = payload.language or ""
+    include_corrected = (payload.mode == "full_fix") or payload.wantCorrected
+
+    is_valid, detected_key = verify_submission(code, language)
+
+    if not is_valid:
+        detected_display = friendly_name.get(detected_key, "Unknown/Ambiguous")
+        selected_display = friendly_name.get(language, language)
+
+        return {
+            "status": "language_mismatch",
+            "detected": detected_display,
+            "selected": selected_display,
+            "message": f"❌ LANGUAGE MISMATCH: You selected '{selected_display}', but detected '{detected_display}'."
+        }
+
+    numbered_code = add_line_numbers(code)
+
+    analysis_prompt = prompt_loader.analysis_prompt
+    analysis_prompt = analysis_prompt.replace("{{LANGUAGE}}", language).replace("{{NUMBERED_CODE}}", numbered_code)
+    if include_corrected:
+        analysis_prompt = analysis_prompt.replace("{{INCLUDE_CORRECTED}}", ', "corrected_code": "<PROVIDE_CODE>"')
+    else:
+        analysis_prompt = analysis_prompt.replace("{{INCLUDE_CORRECTED}}", "")
+
+    try:
+        # 🔹 USE ROTATION FUNCTION (Automatically returns the Dictionary now!)
+        analysis_result = generate_with_rotation(analysis_prompt, require_json=True)
+
+    except Exception as e:
+        traceback.print_exc()
+        return JSONResponse({"status": "error", "message": "AI analysis failed.", "detail": str(e)}, status_code=500)
+
+    if include_corrected and analysis_result.get("status") == "success":
+        return {"status": "full_fix_not_allowed"}
+
+    fullfix_prompt = prompt_loader.fullfix_prompt
+    fullfix_prompt = fullfix_prompt.replace("{{LANGUAGE}}", language).replace("{{NUMBERED_CODE}}", numbered_code)
+    if include_corrected:
+        fullfix_prompt = fullfix_prompt.replace("{{INCLUDE_CORRECTED}}", ', "corrected_code": "<PROVIDE_CODE>"')
+    else:
+        fullfix_prompt = fullfix_prompt.replace("{{INCLUDE_CORRECTED}}", "")
+
+    try:
+        # 🔹 USE ROTATION FUNCTION (Automatically returns the Dictionary now!)
+        json_full = generate_with_rotation(fullfix_prompt, require_json=True)
+
+        return JSONResponse(json_full)
+
+    except Exception as e:
+        traceback.print_exc()
+        return JSONResponse({"status": "error", "message": "AI full fix failed.", "detail": str(e)}, status_code=500)
+
+
+# --------------------------------------------------------------------
+# 🔹 /assistant
+# --------------------------------------------------------------------
+class AssistantPayload(BaseModel):
+    message: str
+
+
+@app.post("/assistant")
+async def assistant(payload: AssistantPayload):
+    message = payload.message or ""
+
+    if not message.strip():
+        return {"status": "error", "message": "Message is required."}
+    try:
+        prompt = f'You are an AI coding assistant.\nUser asked:\n"{message}"'
+        
+        # 🔹 USE ROTATION FUNCTION (require_json=False by default)
+        ai_text = generate_with_rotation(prompt)
+
+        cursor.execute("INSERT INTO ai_chat (user_message, ai_response) VALUES (?, ?)", (message, ai_text))
+        conn.commit()
+        return {"status": "success", "reply": ai_text}
+    except Exception as e:
+        traceback.print_exc()
+        return JSONResponse({"status": "error", "message": "AI assistant failed.", "detail": str(e)}, status_code=500)
+
+
+# --------------------------------------------------------------------
+# 🔹 SQLite Routes
+# --------------------------------------------------------------------
+class SaveCodePayload(BaseModel):
+    code: str
+    language: str
+
+
+@app.post("/save-code")
+async def save_code(payload: SaveCodePayload):
+    try:
+        cursor.execute("INSERT INTO code_history (code, language) VALUES (?, ?)", (payload.code, payload.language))
+        conn.commit()
+        return {"status": "success", "id": cursor.lastrowid}
+    except Exception as e:
+        return JSONResponse({"status": "error", "error": str(e)}, status_code=500)
+
+
+@app.get("/load-last-code")
+async def load_last_code():
+    try:
+        cursor.execute("SELECT * FROM code_history ORDER BY id DESC LIMIT 1")
+        row = cursor.fetchone()
+        if not row:
+            return {"status": "success", "data": None}
+        cols = [d[0] for d in cursor.description]
+        return {"status": "success", "data": dict(zip(cols, row))}
+    except Exception as e:
+        return JSONResponse({"status": "error", "error": str(e)}, status_code=500)
+
+
+@app.get("/load-chat")
+async def load_chat():
+    try:
+        cursor.execute("SELECT * FROM ai_chat ORDER BY id ASC")
+        rows = cursor.fetchall()
+        cols = [d[0] for d in cursor.description]
+        return {"status": "success", "chat": [dict(zip(cols, r)) for r in rows]}
+    except Exception as e:
+        return JSONResponse({"status": "error", "error": str(e)}, status_code=500)
+
+
+class SaveProjectPayload(BaseModel):
+    projectName: str
+    code: str
+    language: str
+
+
+@app.post("/save-project")
+async def save_project(payload: SaveProjectPayload):
+    try:
+        cursor.execute("INSERT INTO projects (project_name, code, language) VALUES (?, ?, ?)",
+                       (payload.projectName, payload.code, payload.language))
+        conn.commit()
+        return {"status": "success", "id": cursor.lastrowid}
+    except Exception as e:
+        return JSONResponse({"status": "error", "error": str(e)}, status_code=500)
+
+
+@app.get("/projects")
+async def get_projects():
+    try:
+        cursor.execute("SELECT * FROM projects ORDER BY created_at DESC")
+        rows = cursor.fetchall()
+        cols = [d[0] for d in cursor.description]
+        return {"status": "success", "projects": [dict(zip(cols, r)) for r in rows]}
+    except Exception as e:
+        return JSONResponse({"status": "error", "error": str(e)}, status_code=500)
+
+
+class FavoritePayload(BaseModel):
+    id: int
+    fav: bool
+
+
+@app.post("/favorite-project")
+async def favorite_project(payload: FavoritePayload):
+    try:
+        cursor.execute("UPDATE projects SET is_favorite = ? WHERE id = ?", (1 if payload.fav else 0, payload.id))
+        conn.commit()
+        return {"status": "success"}
+    except Exception as e:
+        return JSONResponse({"status": "error", "error": str(e)}, status_code=500)
+
+
+class DeletePayload(BaseModel):
+    id: int
+
+
+@app.post("/delete-project")
+async def delete_project(payload: DeletePayload):
+    try:
+        cursor.execute("DELETE FROM projects WHERE id = ?", (payload.id,))
+        conn.commit()
+        return {"status": "success"}
+    except Exception as e:
+        return JSONResponse({"status": "error", "error": str(e)}, status_code=500)

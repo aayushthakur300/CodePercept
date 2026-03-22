@@ -1,0 +1,1143 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>CodePercept - Home</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+
+    <style>
+        /* -------------------------
+           THEME & BODY
+        ------------------------- */
+        :root{
+            --bg-dark: #0b0d10;
+            --panel-dark: #0f1720;
+            --accent: #ff7a18;
+            --muted: #98a0aa;
+        }
+
+        html,body{
+            height:100%;
+            margin:0;
+            padding:0;
+            font-family:"Poppins",system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
+            -webkit-font-smoothing:antialiased;
+            -moz-osx-font-smoothing:grayscale;
+            transition: background-color .35s ease, color .35s ease;
+        }
+
+        body {
+            background: linear-gradient(180deg, var(--bg-dark) 0%, #071018 100%);
+            color: #eef2f6;
+        }
+
+        /* LIGHT MODE */
+        body.light {
+            --bg-dark: #f5f7fb;
+            --panel-dark: #ffffff;
+            --accent: #ff6b00;
+            --muted: #475569;
+            background: linear-gradient(180deg, #ffffff 0%, #f6f7fb 100%);
+            color: #0b1220;
+        }
+
+        /* -------------------------
+           NAVBAR
+        ------------------------- */
+        .navbar-bg {
+            transition: background-color .3s ease, border-color .3s ease, backdrop-filter .3s;
+        }
+        nav.navbar-bg {
+            background: rgba(0,0,0,0.72);
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            backdrop-filter: blur(6px);
+        }
+        body.light nav.navbar-bg {
+            background: rgba(255,255,255,0.85);
+            border-bottom-color: rgba(16,24,40,0.06);
+        }
+
+        /* logo autoscaling (clamp) */
+        .logo-text {
+            font-weight:700;
+            font-size:clamp(1.1rem, 3vw, 2.2rem);
+            letter-spacing:0.2px;
+            white-space:nowrap;
+            display:inline-block;
+        }
+
+        /* -------------------------
+           HERO (NO IMAGE) + OVERLAY
+        ------------------------- */
+        .hero-bg {
+            position:relative;
+            height:100vh;
+            width:100%;
+            display:flex;
+            align-items:center;
+            padding-left:2.5rem;
+            padding-right:2.5rem;
+            box-sizing:border-box;
+            overflow:hidden;
+        }
+
+        /* gradient background for hero */
+        .hero-bg::before{
+            content:"";
+            position:absolute;
+            inset:0;
+            background:
+                radial-gradient(1200px 600px at 10% 35%, rgba(255,122,30,0.06), transparent 8%),
+                radial-gradient(900px 400px at 85% 70%, rgba(163,113,247,0.04), transparent 10%),
+                linear-gradient(180deg, rgba(6,10,15,0.6) 0%, rgba(7,10,18,0.6) 100%);
+            z-index:0;
+            pointer-events:none;
+            transition: background .35s ease;
+        }
+
+        /* lighten hero overlay in light mode */
+        body.light .hero-bg::before {
+            background:
+                radial-gradient(1200px 600px at 10% 35%, rgba(255,122,30,0.06), transparent 8%),
+                radial-gradient(900px 400px at 85% 70%, rgba(163,113,247,0.02), transparent 10%),
+                linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(245,246,250,0.92) 100%);
+        }
+
+        .hero-content {
+            position:relative;
+            z-index:2;
+            max-width:1100px;
+        }
+
+        .hero-title {
+            font-weight:800;
+            line-height:1;
+            margin:0;
+            letter-spacing:-0.02em;
+            font-size:clamp(2.2rem, 5vw, 4.8rem);
+        }
+
+        .hero-sub {
+            margin-top:1rem;
+            color:var(--muted);
+            max-width:760px;
+            font-size:clamp(1rem,2.2vw,1.25rem);
+            line-height:1.5;
+        }
+
+        .cta-btn {
+            margin-top:1.25rem;
+            display:inline-block;
+            background:linear-gradient(90deg, var(--accent), #c75cff);
+            color:white;
+            padding:0.9rem 1.5rem;
+            border-radius:8px;
+            font-weight:700;
+            text-decoration:none;
+            box-shadow:0 8px 30px rgba(0,0,0,0.35);
+            transition: transform .18s ease, box-shadow .18s ease;
+        }
+        .cta-btn:hover { transform:translateY(-4px); box-shadow:0 16px 40px rgba(0,0,0,0.45); }
+
+        /* -------------------------
+           SOCIAL ICONS (FIXED VISIBILITY)
+        ------------------------- */
+        .social-icon {
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            width:64px;
+            height:64px;
+            border-radius:12px;
+            
+            /* Dark Mode Default */
+            color: #e6eef6; 
+            background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+            border:1px solid rgba(255,255,255,0.04);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+            backdrop-filter: blur(6px);
+            
+            transition: transform .22s ease, filter .22s ease, color .22s ease, background .22s ease, box-shadow .22s ease;
+            font-size:1.45rem;
+        }
+
+        /* HOVER STATE (General) */
+        .social-icon:hover{
+            transform: translateY(-8px) scale(1.08);
+            color:var(--accent);
+            filter: drop-shadow(0 6px 18px rgba(255,122,24,0.32));
+        }
+
+        /* >>> FIX: LIGHT MODE SPECIFIC STYLES FOR ICONS <<< */
+        body.light .social-icon {
+            color: #0f172a; /* Turn Text Black/Dark Blue */
+            background: #ffffff; /* White background for the card */
+            border: 1px solid rgba(0,0,0,0.08); /* Darker border */
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08); /* Soft shadow for light mode */
+        }
+        body.light .social-icon:hover {
+            color: var(--accent); /* Orange on hover */
+            border-color: var(--accent);
+            box-shadow: 0 15px 30px rgba(255,107,0,0.15);
+        }
+
+
+        /* subtle floating animation for icons (infinite) */
+        @keyframes floaty {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+            100% { transform: translateY(0px); }
+        }
+        .social-icon.float {
+            animation: floaty 6s ease-in-out infinite;
+        }
+
+        /* -------------------------
+           SUPREME CARD STYLING (Features)
+        ------------------------- */
+        .supreme-card {
+            position: relative;
+            border-radius: 16px;
+            background: rgba(15, 23, 32, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.05);
+            backdrop-filter: blur(20px);
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .supreme-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 16px;
+            padding: 1px;
+            background: linear-gradient(135deg, transparent 40%, var(--accent), #c75cff, transparent 60%);
+            
+            /* Standard & WebKit Mask Definitions */
+            -webkit-mask: 
+                linear-gradient(#fff 0 0) content-box, 
+                linear-gradient(#fff 0 0);
+            mask: 
+                linear-gradient(#fff 0 0) content-box, 
+                linear-gradient(#fff 0 0);
+            
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            
+            opacity: 0.5;
+            transition: opacity 0.4s ease;
+        }
+        
+
+        .supreme-card-bg {
+            position: absolute;
+            inset: 0;
+            background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+            mask-image: radial-gradient(circle at center, black, transparent 80%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .supreme-card:hover {
+            transform: scale(1.02) translateY(-5px);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.6), 0 0 30px rgba(255, 122, 24, 0.15);
+            border-color: rgba(255, 122, 24, 0.3);
+        }
+        
+        .supreme-card:hover::after { opacity: 1; }
+
+        .card-header {
+            display: flex; gap: 8px; padding: 16px 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            background: rgba(0,0,0,0.2);
+            position: relative; z-index: 1;
+        }
+        .dot { width: 10px; height: 10px; border-radius: 50%; }
+        .dot-red { background: #ff5f56; box-shadow: 0 0 8px rgba(255, 95, 86, 0.4); }
+        .dot-yellow { background: #ffbd2e; box-shadow: 0 0 8px rgba(255, 189, 46, 0.4); }
+        .dot-green { background: #27c93f; box-shadow: 0 0 8px rgba(39, 201, 63, 0.4); }
+
+        .card-body { padding: 2rem; position: relative; z-index: 1; }
+
+        .code-features {
+            margin: 0; font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+            font-size: 0.95rem; line-height: 1.8; color: #d1d5db;
+        }
+        .check-icon { text-shadow: 0 0 10px rgba(39, 201, 63, 0.6); filter: brightness(1.2); }
+
+        /* Light mode adjustments for the supreme card */
+        body.light .supreme-card {
+            background: #ffffff;
+            border-color: rgba(0,0,0,0.08);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+        }
+        body.light .code-features { color: #334155; }
+        body.light .card-header { background: rgba(0,0,0,0.03); border-bottom-color: rgba(0,0,0,0.06); }
+
+        /* -------------------------
+           MOBILE MENU
+        ------------------------- */
+        .mobile-menu {
+            position:fixed; inset:0; background:rgba(0,0,0,0.95);
+            display:flex; align-items:center; justify-content:center;
+            flex-direction:column; gap:1.25rem; z-index:60;
+        }
+
+        /* -------------------------
+           FOOTER
+        ------------------------- */
+        .footer-fixed {
+            position:fixed; bottom:0; left:0; right:0;
+            background: linear-gradient(180deg, rgba(0,0,0,0.56), rgba(0,0,0,0.72));
+            border-top:1px solid rgba(255,255,255,0.03);
+            color:var(--muted); padding:12px 16px;
+            text-align:center; z-index:70; font-size:0.95rem;
+        }
+        body.light .footer-fixed {
+            background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0.98));
+            color: #374151; border-top-color: rgba(16,24,40,0.05);
+        }
+
+        /* RESPONSIVE */
+        @media (max-width:920px) {
+            .hero-bg { height: auto; padding-top:96px; padding-bottom:56px; min-height:60vh; }
+            .hero-content { padding: 2rem 0; }
+            .hero-sub { max-width:100%; }
+        }
+        @media (max-width:520px) {
+            .social-icon { width:54px; height:54px; font-size:1.25rem; }
+            .cta-btn { padding:0.8rem 1.1rem; }
+        }
+    </style>
+</head>
+<body class="">
+
+    <nav id="navbar" class="navbar-bg fixed top-0 w-full z-50 px-6 py-4">
+        <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+            <a href="#home" class="logo-text">
+                <span style="color:var(--accent)">Code</span>Percept
+            </a>
+
+            <div class="hidden md:flex items-center gap-8 uppercase text-sm font-semibold">
+                <a href="#home" class="hover:text-orange-400 transition">Home</a>
+                <a href="#about" class="hover:text-orange-400 transition">About</a>
+                <a href="/logicprobe" class="inline-block px-4 py-2 rounded border border-[rgba(255,255,255,0.06)] text-[0.9rem] bg-[linear-gradient(90deg,var(--accent),#c75cff)]">
+                    LogicProbe
+                </a>
+                <a href="#contact" class="hover:text-orange-400 transition">Contact</a>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <button id="themeToggle" aria-label="Toggle theme" class="p-2 rounded-md text-xl">
+                    <i id="themeIcon" class="fa-solid fa-moon"></i>
+                </button>
+                <button id="mobileMenuBtn" class="md:hidden text-2xl p-2" aria-label="Open menu">
+                    <i class="fa-solid fa-bars" style="color:var(--accent)"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div id="mobileMenu" class="mobile-menu hidden">
+        <button id="mobileClose" class="text-4xl text-orange-400 absolute top-6 right-6" aria-label="Close menu">&times;</button>
+        <a href="#home" class="text-2xl" onclick="toggleMobileMenu()">Home</a>
+        <a href="#about" class="text-2xl" onclick="toggleMobileMenu()">About</a>
+        <a href="/logicprobe" class="text-2xl text-orange-300" onclick="toggleMobileMenu()">LogicProbe</a>
+        <a href="#contact" class="text-2xl" onclick="toggleMobileMenu()">Contact</a>
+    </div>
+
+    <header id="home" class="hero-bg">
+        <div class="hero-content max-w-7xl mx-auto">
+            <h1 class="hero-title leading-tight">
+                <span style="color:var(--accent)">Code</span>Percept
+            </h1>
+            <p class="hero-sub mt-4">
+                Understand code like never before — smart analysis, clear explanations, instant fixes.
+                Analyze logic, surface errors, and get suggested corrections — in seconds.
+            </p>
+            <div class="mt-6 flex items-center gap-4">
+                <a href="/logicprobe" class="cta-btn" aria-label="Try LogicProbe">Try LogicProbe →</a>
+            </div>
+        </div>
+    </header>
+
+    <section id="about" class="py-20 bg-transparent">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                
+                <div>
+                    <h2 class="text-4xl font-bold" style="color:var(--accent)">About CodePercept</h2>
+                    <p class="mt-4 text-[1rem] text-[var(--muted)] leading-relaxed">
+                        CodePercept helps developers analyze, debug, and improve their code instantly.
+                        Designed for students and engineering teams who want to move faster with confidence.
+                    </p>    
+                </div>
+
+                <div class="relative">
+                    <div class="supreme-card">
+                        <div class="supreme-card-bg"></div>
+                        <div class="card-header">
+                            <div class="dot dot-red"></div>
+                            <div class="dot dot-yellow"></div>
+                            <div class="dot dot-green"></div>
+                        </div>
+                        <div class="card-body">
+                            <pre class="code-features">
+<span class="check-icon">👉</span> Supports 20+ Programming Languages
+<span class="check-icon">👉</span> Auto Language Detection & Mismatch Alert
+<span class="check-icon">👉</span> Line-by-Line Code Explanation
+<span class="check-icon">👉</span> Exact Error Line Detection
+<span class="check-icon">👉</span> One-Click Full Auto Code Fix
+<span class="check-icon">👉</span> Instant Debugging & Correction
+<span class="check-icon">👉</span> Beginner-Friendly Explanations
+<span class="check-icon">👉</span> Real-Time Code Analysis & many more...</pre>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section id="contact" class="py-24">
+        <div class="max-w-5xl mx-auto px-6 text-center">
+            <h3 class="text-3xl font-bold mb-8">Connect with <span style="color:var(--accent)">Us</span></h3>
+
+            <div class="flex items-center justify-center gap-6">
+                <a class="social-icon float" href="#" title="GitHub" aria-label="GitHub">
+                    <i class="fab fa-github"></i>
+                </a>
+
+                <a class="social-icon" href="#" title="LinkedIn" aria-label="LinkedIn">
+                    <i class="fab fa-linkedin-in"></i>
+                </a>
+
+                <a class="social-icon" href="#" title="Facebook" aria-label="Facebook">
+                    <i class="fab fa-facebook-f"></i>
+                </a>
+
+                <a class="social-icon" href="#" title="Instagram" aria-label="Instagram">
+                    <i class="fab fa-instagram"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer-fixed">
+        © 2025 CodePercept • All Rights Reserved <strong>• Developed by Aayush Thakur</strong>
+    </footer>
+
+    <script>
+        // Mobile menu toggles
+        const mobileMenu = document.getElementById('mobileMenu');
+        const mobileBtn = document.getElementById('mobileMenuBtn');
+        const mobileClose = document.getElementById('mobileClose');
+
+        function toggleMobileMenu() {
+            if (!mobileMenu) return;
+            mobileMenu.classList.toggle('hidden');
+        }
+        if (mobileBtn) mobileBtn.addEventListener('click', toggleMobileMenu);
+        if (mobileClose) mobileClose.addEventListener('click', toggleMobileMenu);
+
+        // Theme toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+
+        (function initTheme(){
+            const stored = localStorage.getItem('cp_theme');
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (stored === 'light') {
+                document.body.classList.add('light');
+                themeIcon.className = 'fa-solid fa-sun';
+            } else if (stored === 'dark') {
+                document.body.classList.remove('light');
+                themeIcon.className = 'fa-solid fa-moon';
+            } else {
+                if (prefersDark) {
+                    document.body.classList.remove('light');
+                    themeIcon.className = 'fa-solid fa-moon';
+                } else {
+                    document.body.classList.add('light');
+                    themeIcon.className = 'fa-solid fa-sun';
+                }
+            }
+        })();
+
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => {
+                const isLight = document.body.classList.toggle('light');
+                localStorage.setItem('cp_theme', isLight ? 'light' : 'dark');
+                themeIcon.className = isLight ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+            });
+        }
+
+        const nav = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (!nav) return;
+            if (window.scrollY > 40) {
+                nav.style.backdropFilter = 'blur(6px)';
+                nav.style.boxShadow = '0 6px 20px rgba(0,0,0,0.25)';
+            } else {
+                nav.style.backdropFilter = '';
+                nav.style.boxShadow = '';
+            }
+        });
+    </script>
+</body>
+</html> -->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>CodePercept | Supreme Logic Analysis</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Montserrat:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+        /* -------------------------
+           THEME VARIABLES
+        ------------------------- */
+        :root {
+            --bg-dark: #050505;
+            --accent: #ef4444;
+            /* Danger Red */
+            --accent-glow: rgba(239, 68, 68, 0.6);
+            --text-main: #ffffff;
+            --text-muted: #e2e8f0;
+            --panel-bg: rgba(15, 15, 20, 0.6);
+            --border-color: rgba(239, 68, 68, 0.1);
+            --footer-bg: rgba(0, 0, 0, 0.9);
+            /* Dark background for fixed footer */
+        }
+
+        /* LIGHT MODE */
+        body.light {
+            --bg-dark: #f0f4f8;
+            --accent: #dc2626;
+            --accent-glow: rgba(220, 38, 38, 0.3);
+            --text-main: #111827;
+            --text-muted: #374151;
+            --panel-bg: #ffffff;
+            --border-color: rgba(220, 38, 38, 0.2);
+            --footer-bg: rgba(255, 255, 255, 0.95);
+            /* Light background for fixed footer */
+        }
+
+        /* -------------------------
+           BASE STYLES
+        ------------------------- */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Montserrat', sans-serif;
+            overflow-x: hidden;
+            transition: background-color 0.4s ease, color 0.4s ease;
+            padding-bottom: 50px;
+            /* SPACE FOR FIXED FOOTER */
+        }
+
+        /* DANGER GRID BACKGROUND */
+        .danger-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(var(--border-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--border-color) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: -1;
+            mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
+            transition: background-image 0.4s ease;
+        }
+
+        /* GLOWING TEXT ANIMATION */
+        @keyframes dangerPulse {
+            0% {
+                text-shadow: 0 0 10px var(--accent-glow);
+            }
+
+            50% {
+                text-shadow: 0 0 25px var(--accent), 0 0 10px rgba(255, 255, 255, 0.5);
+            }
+
+            100% {
+                text-shadow: 0 0 10px var(--accent-glow);
+            }
+        }
+
+        .danger-text {
+            color: var(--accent);
+            animation: dangerPulse 3s infinite alternate;
+        }
+
+        /* NAVBAR */
+        nav.navbar-bg {
+            background: rgba(5, 5, 5, 0.85);
+            border-bottom: 1px solid var(--border-color);
+            backdrop-filter: blur(12px);
+            transition: background-color 0.4s ease, border-color 0.4s ease, backdrop-filter 0.4s ease;
+        }
+
+        body.light nav.navbar-bg {
+            background: rgba(255, 255, 255, 0.9);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        /* THEME & UTILITY TOGGLE ICON STYLE */
+        .nav-icon-btn {
+            color: var(--text-main);
+            transition: color 0.4s ease;
+        }
+
+        .nav-icon-btn:hover {
+            color: var(--accent);
+        }
+
+        /* MOBILE MENU SETTINGS */
+        #mobileMenu {
+            display: none;
+            background: var(--footer-bg);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        #mobileMenu.active {
+            display: flex;
+        }
+
+        /* SPLIT SCREEN MODE SETTINGS */
+        body.split-screen-mode {
+            height: 100vh;
+            overflow: hidden;
+            padding-bottom: 0;
+        }
+
+        body.split-screen-mode > section:not(#demo) {
+            display: none;
+        }
+
+        body.split-screen-mode footer,
+        body.split-screen-mode #contact {
+            display: none;
+        }
+
+        body.split-screen-mode #demo {
+            padding-top: 80px; /* Account for navbar */
+            padding-bottom: 0;
+            height: 100vh;
+            display: flex;
+            align-items: stretch;
+        }
+
+        body.split-screen-mode #demo .max-w-6xl {
+            max-width: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            gap: 0;
+        }
+
+        body.split-screen-mode #demo .demo-content-left {
+            padding: 2rem 4rem;
+            border-right: 2px solid var(--border-color);
+            overflow-y: auto;
+            height: calc(100vh - 80px);
+        }
+
+        body.split-screen-mode #demo .code-preview {
+            border-radius: 0;
+            border: none;
+            height: calc(100vh - 80px);
+            overflow-y: auto;
+        }
+
+        /* HERO BUTTON */
+        .btn-danger-glow {
+            background: linear-gradient(135deg, #991b1b 0%, var(--accent) 100%);
+            color: white;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 0 20px var(--accent-glow);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            z-index: 10;
+        }
+
+        .btn-danger-glow:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 0 40px var(--accent);
+        }
+
+        /* FEATURE CARD STYLE */
+        .feature-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            height: 100%;
+        }
+
+        .feature-card:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 25px var(--accent-glow);
+            transform: translateY(-5px);
+        }
+
+        .feature-icon-lg {
+            font-size: 2rem;
+            color: var(--accent);
+            margin-bottom: 1rem;
+        }
+
+        .feature-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 0.75rem;
+            line-height: 1.2;
+        }
+
+        .feature-description {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+            font-weight: 500;
+        }
+
+        /* White Mode Text Boldness Fix */
+        body.light .feature-title {
+            font-weight: 800;
+        }
+
+        body.light .feature-description {
+            font-weight: 600;
+            color: #374151;
+        }
+
+        /* CODE BLOCK PREVIEW */
+        .code-preview {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-left: 3px solid var(--accent);
+            padding: 1.5rem;
+            border-radius: 8px;
+            color: var(--text-main);
+            position: relative;
+        }
+
+        .code-line {
+            display: block;
+        }
+
+        .code-line::before {
+            content: '>';
+            color: var(--accent);
+            margin-right: 10px;
+        }
+
+        /* CONTACT SECTION STYLES (Scrollable Section) */
+        #contact {
+            padding-top: 4rem;
+            padding-bottom: 4rem;
+            background-color: var(--footer-bg);
+            border-top: 1px solid var(--border-color);
+            transition: background-color 0.4s ease;
+        }
+
+        .connect-text {
+            color: var(--text-main);
+            font-weight: 800;
+        }
+
+        .connect-us-span {
+            color: var(--accent);
+        }
+
+        .social-icon {
+            display: inline-flex;
+            width: 48px;
+            height: 48px;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            transition: all 0.3s ease;
+        }
+
+        .social-icon:hover {
+            color: var(--accent);
+            transform: scale(1.1);
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        /* Attractive Icons in Light Mode */
+        body.light .social-icon {
+            background: #ffffff;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            border-color: #e5e7eb;
+            color: #4b5563;
+        }
+
+        body.light .social-icon:hover {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+            box-shadow: 0 5px 15px rgba(220, 38, 38, 0.4);
+        }
+
+        /* FOOTER (Fixed Copyright Line) */
+        footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 0.5rem 0;
+            /* Minimal padding */
+            background-color: var(--footer-bg);
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+            z-index: 60;
+        }
+
+        /* Copyright Text Styling */
+        .copyright-text {
+            font-size: 0.875rem;
+            /* Base size */
+            font-weight: 700;
+            /* Bold */
+            color: var(--text-muted);
+            transition: color 0.4s ease;
+            display: block;
+        }
+
+        body.light .copyright-text {
+            color: #374151;
+            /* Dark text in light mode */
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="danger-grid"></div>
+
+    <nav class="navbar-bg fixed top-0 w-full z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+            <a href="#" class="text-2xl font-black tracking-tighter uppercase flex items-center gap-2">
+                <span class="text-[var(--text-main)]">Code<span class="danger-text">Percept</span></span>
+            </a>
+
+            <div class="hidden md:flex items-center gap-8 font-bold text-sm uppercase tracking-widest text-[var(--text-main)]">
+                <a href="#features" class="hover:text-red-500 transition duration-300">Features</a>
+                <a href="#demo" class="hover:text-red-500 transition duration-300">Analysis</a>
+                <a href="/logicprobe" target="_blank" class="text-red-500 hover:text-white transition duration-300 border border-red-500/30 px-3 py-1 rounded">
+                    <i class="fa-solid fa-bolt mr-1"></i> LogicProbe
+                </a>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <button id="splitToggle" aria-label="Toggle Split Screen" class="nav-icon-btn hidden md:block p-2 rounded-md text-xl" title="Toggle Split Screen Mode">
+                    <i class="fa-solid fa-table-columns"></i>
+                </button>
+
+                <button id="themeToggle" aria-label="Toggle theme" class="nav-icon-btn p-2 rounded-md text-xl">
+                    <i id="themeIcon" class="fa-solid fa-moon"></i>
+                </button>
+
+                <button id="mobileMenuBtn" aria-label="Toggle Mobile Menu" class="nav-icon-btn md:hidden p-2 rounded-md text-xl">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="mobileMenu" class="flex-col w-full px-6 py-4 gap-4 font-bold text-sm uppercase tracking-widest text-[var(--text-main)]">
+            <a href="#features" class="hover:text-red-500 transition duration-300 block py-2">Features</a>
+            <a href="#demo" class="hover:text-red-500 transition duration-300 block py-2">Analysis</a>
+            <a href="/logicprobe" target="_blank" class="text-red-500 hover:text-red-400 transition duration-300 block py-2">
+                <i class="fa-solid fa-bolt mr-1"></i> LogicProbe
+            </a>
+        </div>
+    </nav>
+
+    <section class="relative pt-40 pb-20 min-h-screen flex items-center justify-center text-center px-6">
+        <div class="max-w-5xl mx-auto z-10">
+            <div
+                class="inline-block px-4 py-1 mb-6 border border-red-500/30 rounded-full bg-red-900/10 text-red-400 text-xs font-bold tracking-widest uppercase animate-pulse">
+                v2.0 System Online
+            </div>
+
+            <h1 class="hero-title text-5xl md:text-7xl font-black mb-6 leading-tight">
+                SUPREME AI <br>
+                <span class="danger-text">CODE PERCEPT</span>
+            </h1>
+
+            <p
+                class="text-[var(--text-muted)] text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed font-semibold">
+                Understand code like never before — smart analysis, clear explanations, instant fixes. 
+                Analyze logic, surface errors, and get suggested corrections — in seconds.
+            </p>
+
+            <div class="flex flex-col md:flex-row gap-6 justify-center">
+                <a href="/logicprobe" target="_blank"
+                    class="btn-danger-glow px-8 py-4 rounded-lg text-lg flex items-center justify-center gap-3">
+                    <i class="fa-solid fa-microchip"></i> Try LogicProbe
+                </a>
+                <a href="#features"
+                    class="px-8 py-4 rounded-lg text-lg font-bold border border-[var(--text-muted)] text-[var(--text-main)] hover:bg-[var(--accent)] hover:border-[var(--accent)] hover:text-white transition flex items-center justify-center gap-2">
+                    Explore Features <i class="fa-solid fa-arrow-down"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section id="features" class="py-24 bg-black/5 dark:bg-black/30">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-black uppercase tracking-wide text-[var(--text-main)]">System <span
+                        class="text-red-500">Capabilities</span></h2>
+                <div class="h-1 w-24 bg-red-600 mx-auto mt-4 rounded"></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+
+                <div class="feature-card">
+                    <i class="fa-solid fa-globe feature-icon-lg"></i>
+                    <h3 class="feature-title">20+ Languages</h3>
+                    <p class="feature-description">Deep-scan analysis detects and supports over 20+ different programming languages instantly.</p>
+                </div>
+
+                <div class="feature-card">
+                    <i class="fa-solid fa-language feature-icon-lg"></i>
+                    <h3 class="feature-title">Auto Detection</h3>
+                    <p class="feature-description">Automatically identifies the source programming language and triggers mismatch alerts without user input.</p>
+                </div>
+
+                <div class="feature-card">
+                    <i class="fa-solid fa-book-open feature-icon-lg"></i>
+                    <h3 class="feature-title">Line-by-Line Breakdown</h3>
+                    <p class="feature-description">Explains the corrected code step-by-step while filtering empty lines, comments, and noise.</p>
+                </div>
+
+                <div class="feature-card">
+                    <i class="fa-solid fa-triangle-exclamation feature-icon-lg"></i>
+                    <h3 class="feature-title">Exact Error Targeting</h3>
+                    <p class="feature-description">Pinpoints exact line numbers with detailed error descriptions mapped directly to the original code.</p>
+                </div>
+
+                <div class="feature-card">
+                    <i class="fa-solid fa-wand-magic-sparkles feature-icon-lg"></i>
+                    <h3 class="feature-title">One-Click Auto Fix</h3>
+                    <p class="feature-description">Automatically generates 100% compliant, corrected code and guarantees compilability.</p>
+                </div>
+
+                <div class="feature-card">
+                    <i class="fa-solid fa-bug feature-icon-lg"></i>
+                    <h3 class="feature-title">Instant Debugging</h3>
+                    <p class="feature-description">Deep-scan analysis detects syntax errors, logical flaws, runtime risks, and security vulnerabilities.</p>
+                </div>
+
+                <div class="feature-card">
+                    <i class="fa-solid fa-graduation-cap feature-icon-lg"></i>
+                    <h3 class="feature-title">Beginner Friendly</h3>
+                    <p class="feature-description">Simplifies complex technical errors into easy-to-understand explanations for students and juniors.</p>
+                </div>
+
+                <div class="feature-card">
+                    <i class="fa-solid fa-bolt feature-icon-lg"></i>
+                    <h3 class="feature-title">Real-Time Analysis</h3>
+                    <p class="feature-description">Live feedback with loading state, progress lock, and visual status indicators right in the UI.</p>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section id="demo" class="py-24 relative overflow-hidden">
+        <div class="max-w-6xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
+
+            <div class="demo-content-left">
+                <h2 class="text-3xl font-bold mb-6 text-[var(--text-main)]">Supreme AI <span
+                        class="text-red-500">LogicProbe</span></h2>
+                <p class="text-[var(--text-muted)] text-lg mb-6 leading-relaxed font-bold">
+                    The LogicProbe engine performs a simultaneous 23-point security and compliance check, providing
+                    granular feedback on efficiency and integrity.
+                </p>
+                <ul class="space-y-4 text-[var(--text-muted)] font-semibold">
+                    <li class="flex items-center gap-3">
+                        <i class="fa-solid fa-check-circle text-green-500"></i>
+                        <span>Time & Space Complexity Analysis</span>
+                    </li>
+                    <li class="flex items-center gap-3">
+                        <i class="fa-solid fa-check-circle text-green-500"></i>
+                        <span>Plagiarism & Integrity Checks</span>
+                    </li>
+                    <li class="flex items-center gap-3">
+                        <i class="fa-solid fa-check-circle text-green-500"></i>
+                        <span>Detailed Error Table with Line Mapping</span>
+                    </li>
+                </ul>
+                <a href="/logicprobe" target="_blank"
+                    class="mt-8 inline-block text-red-400 font-bold hover:text-red-500 transition">
+                    Try Live Demo ->
+                </a>
+            </div>
+
+            <div class="code-preview shadow-2xl shadow-red-900/20">
+                <div class="flex items-center gap-2 mb-4 border-b border-gray-800 pb-2">
+                    <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                    <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                    <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                    <span class="text-xs text-gray-500 ml-auto">analysis_engine.py</span>
+                </div>
+                <code class="text-sm">
+                    <span class="code-line"><span class="text-purple-400">def</span> check_compliance(code_input):</span>
+                    <span class="code-line pl-4"><span class="text-blue-400">if</span> logic_error_detected:</span>
+                    <span class="code-line pl-8 text-red-400"># [ERROR] Runtime Failure: Division by zero risk</span>
+                    <span class="code-line pl-8">return <span class="text-green-400">"FATAL"</span></span>
+                    <span class="code-line pl-4"><span class="text-blue-400">else</span>:</span>
+                    <span class="code-line pl-8">return <span class="text-green-400">"COMPLIANT"</span></span>
+                </code>
+            </div>
+
+        </div>
+    </section>
+
+    <section id="contact" class="py-16">
+        <div class="max-w-7xl mx-auto px-6 text-center">
+            <h3 class="text-3xl font-black mb-8 connect-text">Connect with <span class="connect-us-span">Us</span></h3>
+
+            <div class="flex items-center justify-center gap-6 mb-8">
+                <a class="social-icon" href="#" title="GitHub" aria-label="GitHub">
+                    <i class="fab fa-github"></i>
+                </a>
+
+                <a class="social-icon" href="#" title="LinkedIn" aria-label="LinkedIn">
+                    <i class="fab fa-linkedin-in"></i>
+                </a>
+
+                <a class="social-icon" href="#" title="Facebook" aria-label="Facebook">
+                    <i class="fab fa-facebook-f"></i>
+                </a>
+
+                <a class="social-icon" href="#" title="Instagram" aria-label="Instagram">
+                    <i class="fab fa-instagram"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <footer class="fixed bottom-0 w-full z-60">
+        <div class="max-w-7xl mx-auto px-6">
+            <p class="copyright-text">
+                © 2026 CodePercept • All Rights Reserved • Developed by Aayush Thakur
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // --- THEME TOGGLE LOGIC ---
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+
+        function initTheme() {
+            const stored = localStorage.getItem('cp_theme');
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+            let isLight = false;
+
+            if (stored === 'light') {
+                isLight = true;
+            } else if (stored === 'dark') {
+                isLight = false;
+            } else {
+                isLight = !prefersDark;
+            }
+
+            if (isLight) {
+                document.body.classList.add('light');
+                themeIcon.className = 'fa-solid fa-sun';
+            } else {
+                document.body.classList.remove('light');
+                themeIcon.className = 'fa-solid fa-moon';
+            }
+        }
+
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => {
+                const isLight = document.body.classList.toggle('light');
+                localStorage.setItem('cp_theme', isLight ? 'light' : 'dark');
+                themeIcon.className = isLight ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+            });
+            initTheme(); // Initialize theme on load
+        }
+
+        // --- MOBILE MENU LOGIC ---
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+        
+        if (mobileMenuBtn && mobileMenu) {
+            mobileMenuBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('active');
+            });
+        }
+
+        // --- SPLIT SCREEN TOGGLE LOGIC ---
+        const splitToggle = document.getElementById('splitToggle');
+        
+        if (splitToggle) {
+            splitToggle.addEventListener('click', () => {
+                document.body.classList.toggle('split-screen-mode');
+                
+                // Toggle icon for visual feedback
+                const icon = splitToggle.querySelector('i');
+                if(document.body.classList.contains('split-screen-mode')) {
+                    icon.classList.remove('fa-table-columns');
+                    icon.classList.add('fa-compress'); // Show collapse icon when in split mode
+                    
+                    // Smoothly scroll down to the active workspace area
+                    document.getElementById('demo').scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    icon.classList.remove('fa-compress');
+                    icon.classList.add('fa-table-columns');
+                }
+            });
+        }
+    </script>
+
+</body>
+
+</html>
