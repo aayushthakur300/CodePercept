@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from pathlib import Path
 import traceback
+import itertools # 🔹 For Round Robin cycling
 
 # 🔹 FIX: Load .env file explicitly so os.getenv finds the key
 try:
@@ -28,49 +29,146 @@ import run_tests
 # --- AI client wrapper (pluggable) ---
 try:
     import google.generativeai as genai
+    from google.api_core import exceptions as google_exceptions
     GENAI_AVAILABLE = True
 except Exception:
     genai = None
     GENAI_AVAILABLE = False
 
 API_KEY = os.getenv("GEMINI_API_KEY", "")
-MODEL_ANALYZE_NAME = "gemini-2.5-flash"
-MODEL_FULLFIX_NAME = "gemini-2.5-flash-lite"
 
+# --------------------------------------------------------------------
+# 🔹 MODEL ROTATION CONFIGURATION
+# --------------------------------------------------------------------
+# A list of all models to cycle through (Round Robin + Failover)
+MODELS_POOL = [
+    # 🔥 Gemini 2.5 Series (Latest & Best)
+    
+    'models/gemini-2.0-flash',
+    'models/gemini-2.0-flash-001',
+    'models/gemini-flash-latest',
+    'models/gemini-flash-lite-latest',
+    'models/gemini-2.5-flash',
+    'models/gemini-2.5-flash-lite',
+    'models/gemini-robotics-er-1.5-preview',
 
-def call_model(prompt: str, model_name: str = MODEL_ANALYZE_NAME):
-    if not API_KEY:
-        if not os.getenv("GOOGLE_API_KEY"):
-            raise RuntimeError("Missing GEMINI_API_KEY or GOOGLE_API_KEY")
+    # --- TIER 2: NEXT GEN (2.5) ---
+    'models/gemini-2.5-flash-preview-09-2025',
+    'models/gemini-2.5-flash-lite-preview-09-2025',
+    'models/gemini-2.5-flash-tts',
+
+    # --- TIER 3: HIGH INTELLIGENCE PRO MODELS ---
+    'models/gemini-2.5-pro',
+    'models/gemini-pro-latest',
+    'gemini-3-flash-preview',
+    'models/gemini-3-pro-preview',
+    'models/deep-research-pro-preview-12-2025',
+
+    # --- TIER 4: LIGHTWEIGHT / PREVIEW ---
+    'models/gemini-2.0-flash-lite',
+    'models/gemini-2.0-flash-lite-001',
+    'models/gemini-2.0-flash-lite-preview',
+    'models/gemini-2.0-flash-lite-preview-02-05',
+
+    # --- TIER 5: EXPERIMENTAL ---
+    'models/gemini-2.0-flash-exp',
+    'models/gemini-exp-1206',
+
+    # --- TIER 6: GEMMA (OPEN MODELS FALLBACK) ---
+    'models/gemma-3-27b-it',
+    'models/gemma-3-12b-it',
+    'models/gemma-3-4b-it',
+    'models/gemma-3-1b-it',
+    'models/gemma-3n-e4b-it',
+    'models/gemma-3n-e2b-it',
+
+    # --- TIER 7: OBSCURE PREVIEWS (LAST RESORT) ---
+    'models/gemini-2.5-flash-native-audio-dialog',
+    'models/nano-banana-pro-preview'
+]
+
+# Create a global iterator for Round Robin load balancing
+# This ensures every new request starts with the *next* model in the list
+_model_cycle = itertools.cycle(MODELS_POOL)
+
+def get_next_start_model():
+    """Gets the next model in the round-robin cycle to start with."""
+    return next(_model_cycle)
+
+def generate_with_rotation(prompt: str):
+    """
+    Tries to generate content using models in a loop.
+    1. Starts with the current Round Robin model.
+    2. If Quota Exceeded (429), logs it and immediately tries the next model.
+    3. If success, returns text response.
+    """
+    if not API_KEY and not os.getenv("GOOGLE_API_KEY"):
+         raise RuntimeError("Missing GEMINI_API_KEY or GOOGLE_API_KEY")
 
     if not GENAI_AVAILABLE:
         raise RuntimeError("google-generativeai package not installed")
 
-    try:
-        genai.configure(api_key=os.getenv("GOOGLE_API_KEY") or API_KEY)
-        model = genai.GenerativeModel(model_name)
-        response = model.generate_content(prompt)
+    # Configure API once (or re-configure if keys change dynamically)
+    genai.configure(api_key=os.getenv("GOOGLE_API_KEY") or API_KEY)
 
-        if hasattr(response, "text") and response.text:
-            return response.text
+    # Determine where to start in the pool for this specific request
+    # We rotate the starting point to distribute load (Round Robin)
+    start_model = get_next_start_model()
+    start_index = MODELS_POOL.index(start_model)
 
-        parts = []
-        for cand in getattr(response, "candidates", []) or []:
-            content = getattr(cand, "content", None)
-            if not content:
-                continue
-            for part in getattr(content, "parts", []) or []:
-                text = getattr(part, "text", "")
-                if text:
-                    parts.append(text)
+    # Create a list ordered starting from our round-robin pick
+    # e.g. [C, D, E, A, B] if 'C' was next in line
+    rotated_pool = MODELS_POOL[start_index:] + MODELS_POOL[:start_index]
 
-        if parts:
-            return "\n".join(parts)
+    last_error = None
 
-        return str(response)
+    for model_name in rotated_pool:
+        try:
+            print(f"🤖 Using Model: {model_name}")
+            model = genai.GenerativeModel(model_name)
+            response = model.generate_content(prompt)
 
-    except Exception as e:
-        raise RuntimeError(f"Gemini API failed: {e}")
+            # --- Extract Text ---
+            if hasattr(response, "text") and response.text:
+                return response.text
+            
+            # Handle fragmented parts
+            parts = []
+            for cand in getattr(response, "candidates", []) or []:
+                content = getattr(cand, "content", None)
+                if not content: continue
+                for part in getattr(content, "parts", []) or []:
+                    text = getattr(part, "text", "")
+                    if text: parts.append(text)
+            
+            if parts:
+                return "\n".join(parts)
+            
+            # If we got a response object but no text, it might be safety blocked
+            # We treat empty response as a failure to try next model? 
+            # Or return string representation. Let's return str for safety.
+            return str(response)
+
+        except Exception as e:
+            error_str = str(e).lower()
+            # Check for Quota limits (429) or Overloaded
+            if "429" in error_str or "quota" in error_str or "exhausted" in error_str:
+                print(f"⚠️ QUOTA EXCEEDED for {model_name}. Switching to next model...")
+                last_error = e
+                continue # Try next model in loop
+            
+            if "not found" in error_str or "404" in error_str:
+                 print(f"⚠️ Model {model_name} not found (might be preview/restricted). Skipping...")
+                 continue
+
+            # If it's a real crash (syntax, etc), maybe we shouldn't retry, 
+            # but for reliability, let's print and retry anyway unless it's critical.
+            print(f"❌ Error with {model_name}: {e}")
+            last_error = e
+            continue
+
+    # If we exit the loop, all models failed
+    raise RuntimeError(f"All models exhausted. Last error: {last_error}")
 
 
 # --- Prompt loader ---
@@ -237,15 +335,9 @@ async def explain(payload: ExplainPayload):
         analysis_prompt = analysis_prompt.replace("{{INCLUDE_CORRECTED}}", "")
 
     try:
-        current_key = os.getenv("GOOGLE_API_KEY") or API_KEY
-        if not current_key:
-            raise ValueError("Missing GEMINI_API_KEY or GOOGLE_API_KEY.")
-
-        genai.configure(api_key=current_key)
-        model_analysis = genai.GenerativeModel(MODEL_ANALYZE_NAME)
-        resp = model_analysis.generate_content(analysis_prompt)
-
-        raw_text = getattr(resp, "text", None) or str(resp)
+        # 🔹 USE ROTATION FUNCTION HERE
+        raw_text = generate_with_rotation(analysis_prompt)
+        
         cleaned = re.sub(r"```json|```", "", raw_text).strip()
         analysis_result = json.loads(cleaned)
 
@@ -264,15 +356,9 @@ async def explain(payload: ExplainPayload):
         fullfix_prompt = fullfix_prompt.replace("{{INCLUDE_CORRECTED}}", "")
 
     try:
-        current_key = os.getenv("GOOGLE_API_KEY") or API_KEY
-        if not current_key:
-            raise ValueError("Missing GEMINI_API_KEY or GOOGLE_API_KEY.")
+        # 🔹 USE ROTATION FUNCTION HERE TOO
+        raw_full = generate_with_rotation(fullfix_prompt)
 
-        genai.configure(api_key=current_key)
-        model_full = genai.GenerativeModel(MODEL_FULLFIX_NAME)
-        resp_full = model_full.generate_content(fullfix_prompt)
-
-        raw_full = getattr(resp_full, "text", None) or str(resp_full)
         cleaned_full = re.sub(r"```json|```", "", raw_full).strip()
         json_full = json.loads(cleaned_full)
 
@@ -298,8 +384,9 @@ async def assistant(payload: AssistantPayload):
         return {"status": "error", "message": "Message is required."}
     try:
         prompt = f'You are an AI coding assistant.\nUser asked:\n"{message}"'
-        raw = call_model(prompt, MODEL_ANALYZE_NAME)
-        ai_text = raw if isinstance(raw, str) else str(raw)
+        
+        # 🔹 USE ROTATION FUNCTION HERE
+        ai_text = generate_with_rotation(prompt)
 
         cursor.execute("INSERT INTO ai_chat (user_message, ai_response) VALUES (?, ?)", (message, ai_text))
         conn.commit()

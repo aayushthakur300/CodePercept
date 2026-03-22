@@ -1,0 +1,323 @@
+// ============================================================
+//  CYBERSENTINEL FRONTEND CONTROLLER (FINAL ROBUST VERSION)
+// ============================================================
+
+document.addEventListener("DOMContentLoaded", () => {
+    console.log("✅ CyberSentinel Frontend Initializing...");
+    
+    // --- CONFIGURATION ---
+    const API_BASE = "http://127.0.0.1:8001";
+    const WS_BASE = "ws://127.0.0.1:8001";
+    let currentAnalysisData = null; 
+    let attackChartInstance = null;
+
+    // ============================================================
+    // 1. NEURAL LINK (WebSocket)
+    // ============================================================
+    try {
+        const ws = new WebSocket(`${WS_BASE}/ws/system`);
+        
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            safeSetText("cpuMetric", `CPU: ${data.cpu}%`);
+            safeSetText("ramMetric", `RAM: ${data.ram}%`);
+            
+            const netVal = Math.round((data.net_recv) / 1024);
+            safeSetText("netMetric", `NET: ${netVal} KB/s`);
+
+            // Visual pulse
+            const dot = document.querySelector(".status-dot-live");
+            if(dot) dot.style.boxShadow = `0 0 ${data.cpu * 0.5}px #00ff41`;
+        };
+
+        ws.onerror = () => console.warn("WebSocket Disconnected (Ignore if backend is restarting)");
+    } catch (e) { console.warn("WebSocket Init Failed", e); }
+
+    // ============================================================
+    // 2. DASHBOARD UPDATER
+    // ============================================================
+    function updateDashboard(data) {
+        console.log("🔥 Updating Dashboard with:", data);
+        currentAnalysisData = data; 
+
+        // A. Risk Score
+        const scoreDisplay = document.getElementById("riskScoreDisplay");
+        if(scoreDisplay) {
+            scoreDisplay.textContent = data.risk_score;
+            scoreDisplay.className = `display-4 fw-bold ${getRiskColorText(data.risk_score)}`;
+        }
+
+        // B. Malware Type
+        const typeLabel = document.getElementById("malwareTypeLabel");
+        if(typeLabel) {
+            typeLabel.textContent = data.malware_type;
+            typeLabel.className = `badge fs-6 ${getRiskColorBg(data.risk_score)}`;
+        }
+
+        // C. AI Report (Heuristic Analysis)
+        const aiOutput = document.getElementById("aiExplanation");
+        if(aiOutput) {
+            aiOutput.classList.add("text-light"); // Force visible white text
+            const rawText = data.explanation || "No AI report available.";
+            
+            // Use marked.js if available, otherwise plain text
+            aiOutput.innerHTML = (typeof marked !== 'undefined') ? marked.parse(rawText) : rawText;
+        }
+
+        // D. Charts & Behaviors
+        renderAttackChart(data.behaviors || []);
+        renderBehaviors(data.behaviors || []);
+
+        // E. Show Results Area
+        const resSection = document.getElementById("resultsSection");
+        const emptyState = document.getElementById("emptyState");
+        if(resSection) resSection.classList.remove("d-none");
+        if(emptyState) emptyState.classList.add("d-none");
+    }
+
+    // ============================================================
+    // 3. EVENT LISTENERS (The "Click" Logic)
+    // ============================================================
+    
+    // --- MAIN "ANALYZE" BUTTON (Code & Binary) ---
+    const analyzeBtn = document.getElementById("analyzeBtn");
+    if(analyzeBtn) {
+        analyzeBtn.addEventListener("click", async () => {
+            console.log("🖱️ Analyze Button Clicked");
+            
+            // Check active tab
+            const binaryTab = document.getElementById("binary-tab");
+            const isBinaryTab = binaryTab && binaryTab.classList.contains("active");
+
+            let url = `${API_BASE}/analyze`;
+            let bodyData;
+            let headers = {};
+
+            if (isBinaryTab) {
+                // Binary Mode
+                url = `${API_BASE}/analyze/binary`;
+                const fileInput = document.getElementById("fileInput");
+                if (!fileInput || !fileInput.files[0]) return alert("Please select a binary file first.");
+                
+                const formData = new FormData();
+                formData.append("file", fileInput.files[0]);
+                bodyData = formData;
+            } else {
+                // Code Mode
+                const codeInput = document.getElementById("codeInput");
+                if (!codeInput || !codeInput.value.trim()) return alert("Please paste source code first.");
+                
+                headers = { "Content-Type": "application/json" };
+                bodyData = JSON.stringify({ code: codeInput.value });
+            }
+
+            // Execute
+            const data = await runFetch(url, "POST", bodyData, headers);
+            if(data) {
+                updateDashboard(data);
+                // If binary, show extracted strings in code editor
+                if(isBinaryTab && document.getElementById("code-tab")) {
+                    document.getElementById("codeInput").value = data.code;
+                    new bootstrap.Tab(document.getElementById("code-tab")).show();
+                }
+            }
+        });
+    } else {
+        console.error("❌ CRITICAL: Button with ID 'analyzeBtn' not found in HTML.");
+    }
+
+    // --- STEGANOGRAPHY (Attached to Window for global access) ---
+    window.runStego = async function() {
+        console.log("🖱️ Run Stego Clicked");
+        const fileInput = document.getElementById("stegoInput");
+        if(!fileInput || !fileInput.files[0]) return alert("Upload an image first.");
+
+        const formData = new FormData();
+        formData.append("file", fileInput.files[0]);
+
+        const data = await runFetch(`${API_BASE}/analyze/stego`, "POST", formData);
+        if(data) {
+            // Update Local Yellow Box
+            const output = document.getElementById("stegoResults");
+            if(output) {
+                output.classList.remove("d-none");
+                let html = `<strong>Hidden Data Found:</strong> ${data.has_hidden_data ? '<span class="text-danger fw-bold">YES</span>' : '<span class="text-success">NO</span>'}<br>`;
+                
+                // Logic to extract and show the decoded secret
+                if(data.has_hidden_data && data.behaviors) {
+                    // Search for relevant log line (case-insensitive)
+                    const secretMsg = data.behaviors.find(b => 
+                        b.toLowerCase().includes("decoded") || 
+                        b.toLowerCase().includes("hidden content") ||
+                        b.toLowerCase().includes("secret")
+                    );
+
+                    if(secretMsg) {
+                        // Clean up the message for display
+                        const cleanMsg = secretMsg.replace(/CRITICAL:|Hidden content decoded ->/gi, "").trim();
+                        
+                        html += `<div class="mt-2 p-2 bg-dark border border-warning text-warning font-monospace text-wrap" style="word-break: break-all;">
+                                    <i class="fas fa-key me-2"></i><strong>DECODED:</strong> ${cleanMsg}
+                                 </div>`;
+                    }
+                }
+                output.innerHTML = html;
+            }
+            // Update Main Dash
+            updateDashboard(data);
+        }
+    };
+
+    // --- NETWORK PCAP (Attached to Window for global access) ---
+    window.runPcap = async function() {
+        console.log("🖱️ Run PCAP Clicked");
+        const fileInput = document.getElementById("pcapInput");
+        if(!fileInput || !fileInput.files[0]) return alert("Upload a .pcap file first.");
+
+        const formData = new FormData();
+        formData.append("file", fileInput.files[0]);
+
+        const data = await runFetch(`${API_BASE}/analyze/pcap`, "POST", formData);
+        if(data) {
+            // Update Local Red Box
+            const output = document.getElementById("pcapResults");
+            if(output) {
+                output.classList.remove("d-none");
+                let html = `<div class="mb-2"><strong>Packets:</strong> ${data.packet_count}</div>`;
+                
+                html += data.risk_score > 50 
+                    ? `<div class="text-danger fw-bold">⚠️ Threats Found</div>` 
+                    : `<div class="text-success">✔ Clean</div>`;
+                    
+                output.innerHTML = html;
+            }
+            // Update Main Dash
+            updateDashboard(data);
+        }
+    };
+
+    // ============================================================
+    // 4. UTILITIES (Loading, Charts, Fetch Helper)
+    // ============================================================
+    
+    async function runFetch(url, method, body, headers = {}) {
+        toggleLoading(true);
+        try {
+            const res = await fetch(url, { method, headers, body });
+            if (!res.ok) {
+                const errText = await res.text();
+                throw new Error(`Server Error (${res.status}): ${errText}`);
+            }
+            return await res.json();
+        } catch (e) {
+            console.error("Analysis Error:", e);
+            alert(`Analysis Failed: ${e.message}`);
+            return null;
+        } finally {
+            toggleLoading(false);
+        }
+    }
+
+    function toggleLoading(isLoading) {
+        const overlay = document.getElementById("loadingOverlay");
+        const main = document.getElementById("mainContainer");
+        if(overlay) overlay.style.display = isLoading ? "flex" : "none";
+        if(main) {
+            isLoading ? main.classList.add("blur-content") : main.classList.remove("blur-content");
+        }
+    }
+
+    function safeSetText(id, text) {
+        const el = document.getElementById(id);
+        if(el) el.textContent = text;
+    }
+
+    function getRiskColorText(score) {
+        if (score >= 80) return "text-danger";
+        if (score >= 40) return "text-warning";
+        return "text-success";
+    }
+
+    function getRiskColorBg(score) {
+        if (score >= 80) return "bg-danger";
+        if (score >= 40) return "bg-warning text-dark";
+        return "bg-success";
+    }
+
+    function renderBehaviors(behaviors) {
+        const container = document.getElementById("behaviorsList");
+        if(!container) return;
+        
+        if (!behaviors || behaviors.length === 0) {
+            container.innerHTML = '<span class="text-muted">No specific threats detected.</span>';
+            return;
+        }
+        
+        container.innerHTML = [...new Set(behaviors)].map(b => {
+            // Hide the raw decoded secret from this list to prevent clutter
+            if(b.includes("DECODED") || b.includes("Hidden content")) return ''; 
+            
+            const isCrit = b.includes("CRITICAL") || b.includes("ALERT") || b.includes("Metasploit");
+            return `<span class="badge ${isCrit ? 'bg-danger' : 'bg-dark border border-secondary'} p-2 m-1">${b}</span>`;
+        }).join('');
+    }
+
+    function renderAttackChart(behaviors) {
+        const ctx = document.getElementById('attackChart');
+        if(!ctx) return;
+        
+        // Simple mapping logic
+        const counts = [0, 0, 0, 0, 0]; // Exfil, Cmd, Obfus, Spyware, Crypto
+        
+        if(behaviors) {
+            behaviors.forEach(b => {
+                const s = b.toLowerCase();
+                if(s.includes("net") || s.includes("ip")) counts[0]++;
+                if(s.includes("exec") || s.includes("cmd")) counts[1]++;
+                if(s.includes("hidden") || s.includes("stego")) counts[2]++;
+                if(s.includes("spy") || s.includes("key")) counts[3]++;
+                if(s.includes("enc") || s.includes("cryp")) counts[4]++;
+            });
+        }
+
+        if (attackChartInstance) attackChartInstance.destroy();
+        
+        attackChartInstance = new Chart(ctx.getContext('2d'), {
+            type: 'radar',
+            data: {
+                labels: ["Exfiltration", "Command", "Obfuscation", "Spyware", "Crypto"],
+                datasets: [{
+                    label: 'Intensity',
+                    data: counts.map(c => c > 0 ? c + 2 : 0),
+                    backgroundColor: 'rgba(255, 7, 58, 0.2)',
+                    borderColor: '#ff073a',
+                    borderWidth: 2,
+                    pointBackgroundColor: '#ff073a'
+                }]
+            },
+            options: {
+                scales: {
+                    r: {
+                        grid: { color: '#444' },
+                        angleLines: { color: '#444' },
+                        pointLabels: { color: '#ccc' },
+                        ticks: { display: false }
+                    }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+    }
+
+    // --- PDF EXPORT (Optional) ---
+    const exportBtn = document.getElementById("exportPdfBtn");
+    if(exportBtn) {
+        exportBtn.addEventListener("click", async () => {
+            if(!currentAnalysisData) return alert("Run an analysis first!");
+            alert("PDF Export triggered (Check Backend logs if download doesn't start)");
+            await runFetch(`${API_BASE}/analyze/report/pdf`, "POST", JSON.stringify(currentAnalysisData), { "Content-Type": "application/json" });
+        });
+    }
+
+    console.log("✅ Frontend Ready!");
+});
